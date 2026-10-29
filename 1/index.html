@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>맥적 貊炙 | 구이의 원형, 맥적 — 맥적 전주본점</title>
+<meta name="description" content="전통돼지구이 「맥적」을 현대적으로 복원하고, 전주 지역 식문화 콘텐츠를 결합한 K-BBQ 브랜드. 맥적 전주본점, 전주시 완산구 홍산북로 60-22.">
+<meta name="theme-color" content="#1F1E1C">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;700&amp;text=%E8%B2%8A%E7%82%99%E5%85%A8%E5%B7%9E%E5%8C%A0%E4%BA%BA%E9%85%92%E5%B9%95&amp;display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">본문 바로가기</a>
+
+<header class="hd" id="hd">
+  <div class="hd__bar">
+    <a class="hd__logo" href="#top" aria-label="맥적 처음으로">
+      <img class="hd__logo-ink" src="../assets/logo/logo_main.png" width="1600" height="917" alt="맥적 KOREAN TRADITIONAL BBQ">
+      <img class="hd__logo-paper" src="../assets/logo/logo_main_white.png" width="1600" height="917" alt="" aria-hidden="true">
+    </a>
+
+    <nav class="gnb" id="gnb" aria-label="주 메뉴">
+      <ul class="gnb__list">
+        <li class="gnb__item">
+          <a class="gnb__top" href="#origin">컴퍼니</a>
+          <ul class="gnb__sub">
+            <li><a href="#origin">기업소개</a></li>
+            <li><a href="#business">비전</a></li>
+            <li><a href="#history">연혁</a></li>
+            <li><a href="#store">오시는길</a></li>
+          </ul>
+        </li>
+        <li class="gnb__item">
+          <a class="gnb__top" href="#business">비즈니스</a>
+          <ul class="gnb__sub">
+            <li><a href="#biz-dining">외식사업</a></li>
+            <li><a href="#biz-franchise">가맹사업</a></li>
+            <li><a href="#biz-meat">육가공 및 유통사업</a></li>
+            <li><a href="#biz-food">식품제조 및 가공사업</a></li>
+          </ul>
+        </li>
+        <li class="gnb__item">
+          <a class="gnb__top" href="#origin">브랜드</a>
+          <ul class="gnb__sub">
+            <li><a href="#origin">맥적</a></li>
+          </ul>
+        </li>
+        <li class="gnb__item">
+          <a class="gnb__top" href="#franchise">프랜차이즈</a>
+          <ul class="gnb__sub">
+            <li class="gnb__soon">준비 중</li>
+            <li><a href="#franchise">브랜드 소개</a></li>
+            <li><a href="#franchise">창업절차</a></li>
+            <li><a href="#inquiry">창업문의</a></li>
+          </ul>
+        </li>
+        <li class="gnb__item">
+          <a class="gnb__top" href="#news">커뮤니티</a>
+          <ul class="gnb__sub">
+            <li><a href="#news">공지사항</a></li>
+            <li><a href="#" data-soon>고객의소리</a></li>
+            <li><a href="#store">매장찾기</a></li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="hd__act">
+      <a class="hd__tel mag" href="tel:063-222-2003" data-magnetic><span class="mag-inner">전화 063-222-2003</span></a>
+      <a class="hd__cta mag" href="#inquiry" data-magnetic><span class="mag-inner">창업 문의</span></a>
+      <button class="hd__burger" type="button" aria-label="전체 메뉴 열기" aria-expanded="false" aria-controls="mnav"><i></i><i></i></button>
+    </div>
+  </div>
+  <div class="mega-bg" aria-hidden="true"></div>
+</header>
+
+<div class="mnav" id="mnav" role="dialog" aria-modal="true" aria-label="전체 메뉴" hidden>
+  <div class="mnav__in">
+    <div class="mnav__groups" id="mnavGroups"></div>
+    <div class="mnav__foot">
+      <a class="btn btn--paper" href="tel:063-222-2003">전화 063-222-2003</a>
+      <a class="btn btn--line" href="#inquiry">창업 문의</a>
+    </div>
+  </div>
+</div>
+
+<main id="main">
+
+  <!-- 1. 첫 화면: 발묵 산수 -->
+  <section class="hero" id="top" aria-labelledby="hero-title">
+    <div class="hero__art" aria-hidden="true">
+      <img class="hero__img" src="../assets/art/menu_sansu_2000.jpg" srcset="../assets/art/menu_sansu_2000.jpg 2000w, ../assets/art/menu_sansu_4000.jpg 3200w" sizes="(orientation: portrait) 150vw, 100vw" width="2000" height="2000" alt="" fetchpriority="high">
+      <canvas class="hero__ink" id="ink"></canvas>
+    </div>
+    <div class="hero__copy" id="heroCopy">
+      <h1 class="hero__title" id="hero-title"><span class="hero__line" data-split>구이의 원형, 맥적</span><span class="seal" aria-hidden="true"><b>貊</b><b>炙</b></span></h1>
+      <p class="hero__sub">불과 맛의 원형을 전하는 한국 고유의 식문화</p>
+    </div>
+  </section>
+
+  <!-- 2. 이름의 뜻 -->
+  <section class="sec origin" id="origin" aria-labelledby="origin-h">
+    <div class="wrap">
+      <div class="origin__head">
+        <p class="hanja origin__hanja" aria-hidden="true">貊炙</p>
+        <div class="origin__text">
+          <h2 class="h2" id="origin-h">맥적, 맥족의 구이</h2>
+          <p class="lead">맥적(貊炙)은 고구려 고분벽화 속, 불 위에 고기를 올려 굽던 한국 고기구이의 원형에서 시작되었습니다.</p>
+          <p class="body">맥적(貊炙)은 맥족(貊族)의 구이로, 우리나라 고기구이 중 가장 오래된 고기요리를 의미합니다. <span class="cite">이규진·조미숙, 『한국고기구이의 문화사』</span></p>
+        </div>
+      </div>
+
+      <figure class="mural">
+        <div class="mural__frame">
+          <img src="../assets/art/anak3_kitchen_commons.jpg" width="2000" height="975" loading="lazy" decoding="async" alt="고구려 안악3호분 부엌 벽화. 왼쪽 부엌에서 부뚜막에 불을 지피고, 가운데 고기 걸이에 고기가 걸려 있다.">
+          <span class="pin pin--fire" style="--x:19.8%;--y:56%"><b class="pin__label">부뚜막의 불</b></span>
+          <span class="pin pin--hook" style="--x:42.4%;--y:42%"><b class="pin__label">고기 걸이</b></span>
+        </div>
+        <figcaption class="mural__cap">그림: 안악3호분 부엌 벽화(357년), 공개 도메인</figcaption>
+      </figure>
+
+      <div class="thennow">
+        <figure class="thennow__item">
+          <div class="thennow__crop" role="img" aria-label="벽화 속 고기 걸이를 가까이 본 모습"></div>
+          <figcaption><b>357년</b>안악3호분 부엌의 고기 걸이</figcaption>
+        </figure>
+        <span class="thennow__link" aria-hidden="true"></span>
+        <figure class="thennow__item">
+          <img src="../assets/photo/meat_hanger_s.jpg" width="750" height="1000" loading="lazy" decoding="async" alt="맥적 라이브 키친의 고기걸이 냉장고에 걸린 고기">
+          <figcaption><b>오늘</b>맥적 라이브 키친의 고기걸이 냉장고</figcaption>
+        </figure>
+        <div class="thennow__text">
+          <p class="sign">불 위의 맛</p>
+          <p class="body">그릴에 초벌하는 모습을 볼 수 있는 라이브 키친. 대리석 상판의 바 너머로 고기걸이 냉장고가 보입니다.</p>
+          <p class="body">맥적은 고구려 시대부터 전해진 원초적 구이의 정신을 품고, 전주라는 역사와 문화의 도시에서 이를 현대적으로 재해석한 프리미엄 전통 BBQ 브랜드입니다.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. 3단 마이야르 -->
+  <section class="sec grill" id="grill" aria-labelledby="grill-h">
+    <div class="wrap">
+      <div class="sec__head">
+        <h2 class="h2" id="grill-h">3단 마이야르 전통구이 기법</h2>
+        <p class="lead">주물판 → 참숯 → 돌판의 3단 마이야르 조리기술. 육즙·불향·식감의 조화입니다.</p>
+      </div>
+      <ol class="steps scroller" aria-label="굽는 순서">
+        <li class="step">
+          <div class="step__ph"><img src="../assets/photo/grill_raw_s.jpg" width="1000" height="750" loading="lazy" decoding="async" alt="그릴 위에 올린 두툼한 생 세겹살"></div>
+          <p class="step__no" aria-hidden="true">1</p>
+          <h3 class="step__t">주물판</h3>
+        </li>
+        <li class="step">
+          <div class="step__ph"><img src="../assets/photo/grill_char_s.jpg" width="750" height="1000" loading="lazy" decoding="async" alt="참숯 불에 겉면이 구워진 고기"></div>
+          <p class="step__no" aria-hidden="true">2</p>
+          <h3 class="step__t">참숯</h3>
+        </li>
+        <li class="step">
+          <div class="step__ph"><img src="../assets/photo/table_spread_s.jpg" width="1000" height="750" loading="lazy" decoding="async" alt="진회색 전통 돌판이 놓인 맥적 한 상"></div>
+          <p class="step__no" aria-hidden="true">3</p>
+          <h3 class="step__t">돌판</h3>
+        </li>
+      </ol>
+      <p class="grill__note">지역특산물로 만든 특제 된장소스를 발라 초벌, 전통 돌판에 굽는 방식</p>
+
+      <div class="master">
+        <p class="hanja master__hanja" aria-hidden="true">匠人</p>
+        <div class="master__text">
+          <h3 class="h3">돼지구이 장인</h3>
+          <p class="body">진짜 불맛을 찾기 위한 여정은 오로지 시간과의 싸움, 돼지구이 장인은 불맛을 설계하는 사람입니다. 온도와 시간을 정밀하게 다루는 손길로, 현대적 직화구이와 전통 돌판의 조화를 완성합니다. 원초성과 섬세함이 공존하는 차별화된 맛을 경험하세요.</p>
+          <p class="quote">“가장 맛있는 순간을 만들어드리는 직접 그릴링으로 손님을 맞이합니다”</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. 대표 메뉴 -->
+  <section class="sec menu" id="menu" aria-labelledby="menu-h">
+    <div class="wrap">
+      <div class="menu__head">
+        <p class="hanja menu__hanja" aria-hidden="true">全州</p>
+        <div>
+          <h2 class="h2" id="menu-h">전주의 맛</h2>
+          <p class="body">전주는 맑은 물에서 자란 제철 식재료와 솜씨 좋은 손길로 빚은 밑반찬, 오방색과 전통주가 어우러져 오감을 만족시키는 풍요로운 미식의 고장입니다.</p>
+        </div>
+      </div>
+
+      <div class="cuts scroller" aria-label="대표 부위">
+        <article class="cut">
+          <div class="cut__ph"><img src="../assets/photo/changhoji_moksal.jpg" width="450" height="450" loading="lazy" decoding="async" alt="얇게 저민 창호지목살"></div>
+          <h3 class="cut__t">창호지목살 <span>150g</span></h3>
+          <p class="cut__p">16,000원</p>
+          <p class="cut__d">최고등급 마블고기를 3mm로 저며 전주의 창호지 같은 질감을 표현한 목살</p>
+        </article>
+        <article class="cut">
+          <div class="cut__ph"><img src="../assets/photo/stone_pork_s.jpg" width="1000" height="1000" loading="lazy" decoding="async" alt="돌판 위에서 구워지는 세겹살"></div>
+          <h3 class="cut__t">세겹살 <span>150g</span></h3>
+          <p class="cut__p">15,000원</p>
+          <p class="cut__d">1+등급 선별 숙성된 마블고기를 15일간 숙성시킨 진품 삼겹살</p>
+        </article>
+        <article class="cut">
+          <div class="cut__ph"><img src="../assets/photo/deungsim_giwasal.jpg" width="450" height="450" loading="lazy" decoding="async" alt="기와 모양으로 자른 등심기왓살"></div>
+          <h3 class="cut__t">등심기왓살 <span>150g</span></h3>
+          <p class="cut__p">19,000원</p>
+          <p class="cut__d">전주의 한옥 기와를 형상화하여 기와모양으로 자른 등심덧살</p>
+        </article>
+      </div>
+
+      <div class="sets">
+        <div class="set">
+          <h3 class="set__t">맥 세트 <span>600g</span></h3>
+          <p class="set__d">창호지목살 + 숙성세겹살 + 등심기왓살 + 토장찌개</p>
+          <p class="set__p">67,000<small>원</small></p>
+        </div>
+        <div class="set">
+          <h3 class="set__t">적 세트 <span>400g</span></h3>
+          <p class="set__d">창호지목살 + 숙성세겹살 + 토장찌개</p>
+          <p class="set__p">45,000<small>원</small></p>
+        </div>
+      </div>
+
+      <ul class="sides scroller" aria-label="곁들임과 후식">
+        <li class="side">
+          <img src="../assets/photo/obang_plate_s.jpg" width="639" height="291" loading="lazy" decoding="async" alt="오방색 쌈채소 한 접시">
+          <div><h3 class="side__t">오방쌈채 <span>3,000원</span></h3><p class="side__d">청(깻잎), 적(파프리카·당근), 황(파인애플), 백(무채·양파), 흑(보라양배추)</p></div>
+        </li>
+        <li class="side">
+          <img src="../assets/photo/jjigae_s.jpg" width="669" height="502" loading="lazy" decoding="async" alt="뚝배기에 담긴 맥적 토장찌개">
+          <div><h3 class="side__t">맥적 토장찌개 <span>7,000원</span></h3><p class="side__d">5가지의 된장을 배합한 맥적의 시그니처 된장찌개. 우렁·차돌·냉이 중 선택</p></div>
+        </li>
+        <li class="side">
+          <img src="../assets/photo/bibim_fried_rice_s.jpg" width="679" height="670" loading="lazy" decoding="async" alt="돌판 위 전주비빔볶음밥">
+          <div><h3 class="side__t">전주비빔볶음밥·불닭볶음면·치즈 반반 <span>9,000원</span></h3><p class="side__d">전주의 비빔밥을 형상화한 후식</p></div>
+        </li>
+      </ul>
+      <p class="menu__note">맥적 한식반상 기본 제공 — 우리 고장에서 자란 제철 야채, 직접 담근 장아찌, 국내산 숙성김치, 전통장류로 만든 특제소스</p>
+    </div>
+  </section>
+
+  <!-- 5. 비즈니스 -->
+  <section class="sec sec--paper biz" id="business" aria-labelledby="biz-h">
+    <div class="wrap">
+      <div class="sec__head">
+        <h2 class="h2" id="biz-h">전통으로 굽고, 지역으로 맛내며,<br>고객이 사랑하는 브랜드</h2>
+        <p class="lead">전통의 품격과 현대의 감각을 잇는 전주 대표 고깃집, 세계가 주목하는 로컬 다이닝 경험</p>
+      </div>
+      <div class="biz__grid scroller">
+        <article class="bz bz--main" id="biz-dining">
+          <div class="bz__ph"><img src="../assets/photo/interior_hall_s.jpg" width="1000" height="750" loading="lazy" decoding="async" alt="맥적 전주본점 홀"></div>
+          <p class="bz__state is-now">지금 운영</p>
+          <h3 class="bz__t">외식사업</h3>
+          <p class="bz__d">맥적 전주본점 운영</p>
+        </article>
+        <article class="bz" id="biz-franchise">
+          <div class="bz__ph"><img src="../assets/photo/facade_night_s.jpg" width="1000" height="750" loading="lazy" decoding="async" alt="밤의 맥적 전주본점 외관"></div>
+          <p class="bz__state">준비 중</p>
+          <h3 class="bz__t">가맹사업</h3>
+          <p class="bz__d">직영으로 검증한 모델을 가맹으로</p>
+        </article>
+        <article class="bz" id="biz-meat">
+          <div class="bz__ph"><img src="../assets/photo/live_bar_a_s.jpg" width="1000" height="750" loading="lazy" decoding="async" alt="고기걸이 냉장고가 보이는 라이브 키친"></div>
+          <p class="bz__state">준비 중</p>
+          <h3 class="bz__t">육가공 및 유통사업</h3>
+          <p class="bz__d">창호지목살·세겹살 15일 숙성·등심기왓살 정형, 고기와 소스를 담은 BBQ 패키지</p>
+        </article>
+        <article class="bz" id="biz-food">
+          <div class="bz__ph"><img src="../assets/photo/jjigae_s.jpg" width="669" height="502" loading="lazy" decoding="async" alt="특제 된장으로 끓인 토장찌개"></div>
+          <p class="bz__state">상품화 준비 중</p>
+          <h3 class="bz__t">식품제조 및 가공사업</h3>
+          <p class="bz__d">전통장류로 만든 특제소스(마늘 육장·보리쌈장 등), 전주비빔볶음밥 소스·된장찌개 소스. 매장 상업용 주방에서 직접 제조</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. 주막이자 사랑방 -->
+  <section class="sec jumak" id="jumak" aria-labelledby="jumak-h">
+    <div class="jumak__wide">
+      <img src="../assets/photo/hall_sansu_wall.jpg" width="1496" height="830" loading="lazy" decoding="async" alt="진경산수화 대형 벽면이 있는 맥적 홀">
+      <p class="hanja jumak__hanja" aria-hidden="true">酒幕</p>
+    </div>
+    <div class="wrap jumak__body">
+      <div class="jumak__text">
+        <h2 class="h2" id="jumak-h">주막이자 사랑방</h2>
+        <p class="lead">붉은 노을 아래 하루의 무게를 내려놓는 자리, 고기 한 점과 술 한잔에 위로가 스미는 이 곳은 한국인의 사랑방입니다.</p>
+        <p class="body">그 옛날 주막처럼, 정과 쉼이 고스란히 살아 있는 위로의 공간이고자 합니다.</p>
+        <ul class="jumak__facts">
+          <li>진경산수화 대형 벽면과 한지 등</li>
+          <li>핀 조명 아래 원형 테이블 3곳</li>
+          <li>옥색 고려청자·백자 술병, 전통주 하이볼 페어링</li>
+        </ul>
+      </div>
+      <div class="jumak__ph"><img src="../assets/photo/round_table_s.jpg" width="1000" height="1000" loading="lazy" decoding="async" alt="반찬이 차려진 원형 테이블"></div>
+    </div>
+  </section>
+
+  <!-- 7. 매장 안내 -->
+  <section class="sec store" id="store" aria-labelledby="store-h">
+    <div class="wrap store__grid">
+      <div class="store__ph"><img src="../assets/photo/facade_dusk_s.jpg" width="1000" height="750" loading="lazy" decoding="async" alt="해 질 무렵 맥적 전주본점 외관. 진회색 기와와 한지 느낌 간판"></div>
+      <div class="store__info">
+        <h2 class="h2" id="store-h">맥적 전주본점</h2>
+        <p class="store__addr">전북특별자치도 전주시 완산구 홍산북로 60-22 1층 101호<span>효자동3가, 전주 신시가지</span></p>
+        <table class="hours">
+          <caption>영업시간</caption>
+          <tbody>
+            <tr data-days="1,2"><th scope="row">월·화</th><td>16:00 – 03:00</td></tr>
+            <tr data-days="3,4,5,6"><th scope="row">수 – 토</th><td>16:00 – 04:00</td></tr>
+            <tr data-days="0"><th scope="row">일</th><td>16:00 – 01:00</td></tr>
+            <tr><th scope="row">공휴일</th><td>17:00 – 04:00</td></tr>
+          </tbody>
+        </table>
+        <p class="store__small">라스트오더는 마감 1시간 전입니다.</p>
+        <dl class="store__dl">
+          <div><dt>주차</dt><dd>자체 주차 공간 없음, 홍산라이브 공영주차장 1시간 무료 지원</dd></div>
+          <div><dt>전화</dt><dd><a href="tel:063-222-2003">063-222-2003</a></dd></div>
+          <div><dt>편의</dt><dd>예약 가능, 남녀 화장실 분리</dd></div>
+          <div><dt>위생</dt><dd>식품위생등급 ‘매우우수’ (식약처, 2025.09.15)</dd></div>
+        </dl>
+        <div class="store__btns">
+          <a class="btn btn--dusk" href="tel:063-222-2003">전화 걸기</a>
+          <a class="btn btn--line" href="https://place.map.kakao.com/1179115391" target="_blank" rel="noopener">카카오맵 길찾기</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. 프랜차이즈 -->
+  <section class="sec sec--paper fr" id="franchise" aria-labelledby="fr-h">
+    <div class="wrap fr__grid">
+      <div class="fr__text">
+        <p class="fr__state">프랜차이즈 준비 중</p>
+        <h2 class="h2" id="fr-h">직영으로 검증한 모델을 가맹으로</h2>
+        <p class="body">전통돼지구이 「맥적」을 현대적으로 복원하고, 전주 지역 식문화 콘텐츠를 결합한 K-BBQ 브랜드입니다.</p>
+        <ul class="fr__list">
+          <li><b>브랜드 소개</b>구이의 원형, 맥적</li>
+          <li><b>창업절차</b>준비 중</li>
+          <li><b>창업문의</b>아래 칸에 남겨 주세요</li>
+        </ul>
+        <a class="fr__tel" href="tel:063-222-2003">가맹 상담 전화 063-222-2003</a>
+      </div>
+      <form class="inq" id="inquiry" novalidate aria-labelledby="inq-h">
+        <h3 class="h3" id="inq-h">창업 문의</h3>
+        <div class="inq__fields">
+          <label class="fld"><span>이름</span><input name="name" type="text" autocomplete="name" required></label>
+          <label class="fld"><span>연락처</span><input name="tel" type="tel" inputmode="tel" autocomplete="tel" required placeholder="010-0000-0000"></label>
+          <label class="fld"><span>창업 희망 지역</span><input name="area" type="text" required placeholder="예: 전주, 군산"></label>
+        </div>
+        <label class="agree"><input type="checkbox" name="agree" required><span>상담을 위한 개인정보(이름·연락처·희망 지역) 수집·이용에 동의합니다.</span></label>
+        <p class="inq__err" role="alert" aria-live="assertive"></p>
+        <button class="btn btn--ink inq__btn" type="submit">상담 신청</button>
+        <div class="inq__done" role="status" aria-live="polite" hidden>
+          <p class="inq__done-t">접수되었습니다</p>
+          <p class="body">급하신 경우 063-222-2003으로 전화 주세요.</p>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- 9. 소식 -->
+  <section class="sec news" id="news" aria-labelledby="news-h">
+    <div class="wrap">
+      <div class="news__head">
+        <h2 class="h2" id="news-h">소식</h2>
+        <div class="news__links">
+          <a class="btn btn--line" href="#" data-soon>고객의 소리</a>
+          <a class="btn btn--line" href="https://www.instagram.com/maekjeok_bbq" target="_blank" rel="noopener">인스타그램 @maekjeok_bbq</a>
+        </div>
+      </div>
+      <div class="news__grid scroller">
+        <article class="post post--main">
+          <p class="post__meta"><span>공지</span><time datetime="2026-08-24">2026.08.24</time></p>
+          <h3 class="post__t">가을의 맥적</h3>
+          <p class="body">처서가 지나고, 어느덧 9월을 앞두고 있습니다. 뜨거웠던 여름의 기운은 조금씩 잦아들고, 아침저녁으로 선선한 바람이 느껴지는 계절입니다.</p>
+          <details class="post__more">
+            <summary>공지 전문 보기</summary>
+            <p class="body">가을의 시작, 맥적은 좋은 고기와 정성스럽게 만든 반찬, 그리고 가장 맛있는 순간을 만들어드리는 직접 그릴링으로 손님을 맞이합니다.</p>
+            <p class="body">계절이 바뀌어도 변하지 않는 것은 좋은 재료와 한 끼에 담는 정성입니다. 다가오는 9월에도 전주의 맛과 따뜻한 한 상을 맥적에서 즐겨보세요.</p>
+            <p class="body">가을의 시작, 불 위의 맛. 전주 맥적.</p>
+          </details>
+        </article>
+        <article class="post">
+          <p class="post__meta"><span>소식</span><time datetime="2026-02">2026.02</time></p>
+          <h3 class="post__t">비짓전주 ‘전주의 맛 – 삼겹살’ 등재</h3>
+          <p class="body">전주시 공식 관광 플랫폼 「비짓전주」의 ‘전주의 맛 – 삼겹살’ 코너에 맥적이 실렸습니다.</p>
+        </article>
+        <article class="post">
+          <p class="post__meta"><span>소식</span><time datetime="2026-05-19">2026.05.19</time></p>
+          <h3 class="post__t">맥적 상표 등록</h3>
+          <p class="body">제40-2546564호, 43류 식당업. 한옥 지붕선과 불의 수호신, 전통 옛체를 담은 로고입니다.</p>
+        </article>
+      </div>
+
+      <div class="hist" id="history">
+        <h3 class="h3">걸어온 길</h3>
+        <ol class="hist__list">
+          <li><time>2024.01 – 2025.07</time><span>특제소스 개발</span></li>
+          <li><time>2025.08</time><span>브랜드 BI</span></li>
+          <li><time>2025.09</time><span>식육처리공장 견학(선진포크 논산)</span></li>
+          <li><time>2025.09.15</time><span>식품위생등급 ‘매우우수’ (식약처)</span></li>
+          <li><time>2025.10</time><span>전통주 하이볼 협업(디오니)</span></li>
+          <li><time>2026.01</time><span>소상공인 IP창출 지원사업 선정·특허출원</span></li>
+          <li><time>2026.02</time><span>비짓전주 ‘전주의 맛 – 삼겹살’ 등재</span></li>
+          <li><time>2026.05.19</time><span>상표 등록 (제40-2546564호)</span></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="ft">
+  <div class="wrap ft__in">
+    <img class="ft__logo" src="../assets/logo/logo_main_white.png" width="1600" height="917" loading="lazy" alt="맥적 KOREAN TRADITIONAL BBQ">
+    <div class="ft__info">
+      <p class="ft__name">맥적 전주본점</p>
+      <p>대표 김현우</p>
+      <p>전북특별자치도 전주시 완산구 홍산북로 60-22 1층 101호</p>
+      <p><a href="tel:063-222-2003">063-222-2003</a></p>
+      <p><a href="https://www.instagram.com/maekjeok_bbq" target="_blank" rel="noopener">인스타그램 @maekjeok_bbq</a></p>
+    </div>
+    <p class="ft__copy">© 맥적</p>
+  </div>
+</footer>
+
+<nav class="appbar" id="appbar" aria-label="빠른 이동">
+  <a href="#top" data-sec="top">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 12 4l8.5 7"/><path d="M5.5 9.5V20h4.5v-5.5h4V20h4.5V9.5"/></svg>
+    <span>홈</span>
+  </a>
+  <a href="#menu" data-sec="menu">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5v17"/><path d="M4.5 3.5v5a2.5 2.5 0 0 0 5 0v-5"/><path d="M17 20.5v-17c-2.2 1.2-3.5 3.8-3.5 7.5h3.5"/></svg>
+    <span>메뉴</span>
+  </a>
+  <a href="#store" data-sec="store">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s6.5-5.6 6.5-11a6.5 6.5 0 0 0-13 0c0 5.4 6.5 11 6.5 11Z"/><path d="M12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/></svg>
+    <span>매장</span>
+  </a>
+  <a href="#inquiry" data-sec="franchise">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 5.5h15v10h-9l-4.5 3.5v-3.5h-1.5Z"/><path d="M8.5 9.5h7"/><path d="M8.5 12.5h4"/></svg>
+    <span>창업문의</span>
+  </a>
+  <a href="tel:063-222-2003">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 3.5h-2a1.5 1.5 0 0 0-1.5 1.6c.5 8 6.9 14.4 14.9 14.9a1.5 1.5 0 0 0 1.6-1.5v-2l-4-1.5-2 2a11 11 0 0 1-5-5l2-2Z"/></svg>
+    <span>전화</span>
+  </a>
+</nav>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
