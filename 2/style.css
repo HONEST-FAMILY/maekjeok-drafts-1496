@@ -35,7 +35,8 @@ body {
 img { display: block; max-width: 100%; height: auto; }
 a { color: inherit; }
 ul, ol { list-style: none; }
-button { font: inherit; color: inherit; }
+button, input, select, textarea { font: inherit; }
+button { color: inherit; }
 :focus-visible { outline: 2px solid var(--tan); outline-offset: 3px; }
 
 .skip {

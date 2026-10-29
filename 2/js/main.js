@@ -91,6 +91,7 @@ try {
     isTouch,
     muralSrc: '../assets/art/anak3_kitchen_commons.jpg',
     tileSrc: '../assets/art/hanji_linen_tile.jpg',
+    linesSrc: 'img/anak3_lines.png',
     onFirstBurn: () => hint.classList.add('is-off'),
   });
   nk.loaded.catch((err) => { console.warn(err); stageEl.classList.add('is-still'); });

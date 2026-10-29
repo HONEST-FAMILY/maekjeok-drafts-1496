@@ -11,45 +11,41 @@ const sstep = (a, b, x) => {
 export const NK = {
   radiusFrac: 0.04, radiusMin: 24, radiusMax: 70, // 인두 반경 = 무대 폭 4%
   pass: 0.35,      // 보통 빠르기로 한 번 지날 때 쌓이는 열
-  base: 0.82,      // 바탕(벽화 선이 없는 곳)의 그을림 빠르기 → 세 번이면 짙은 갈 문턱
-  lineGain: 1.0,   // 벽화 선 자리 = 0.82 + 1.0 = 1.82 (바탕의 약 2.2배)
-  cap: 1.3,        // 바탕은 짙은 갈에서 멈춤(선 자리만 숯까지)
-  th: [0.175, 0.525, 0.875, 1.47], // 연갈 · 갈 · 짙은 갈 · 숯 문턱
-  w: 0.075,        // 단계 경계의 부드러움
+  base: 0.6,       // 바탕(선이 아닌 곳) 그을림 빠르기 — 아무리 문질러도 연갈~갈(2단)까지만
+  lineGain: 1.0,   // 선화 자리: 짙은 갈 → 숯
+  cap: 1.3,
+  bgTh: [0.15, 0.5], bgW: 0.09,   // 바탕 2단 문턱(부드럽게)
+  lnTh: [0.05, 0.38, 0.5, 0.95],  // 선: 짙은 갈로 진해지는 구간, 숯으로 가는 구간
   speedPC: 700, speedTouch: 450, // '보통 빠르기'(px/s)
-  demoDur: 2.5, demoHeat: 0.9, // 시범 인두: 2.5초, 지나간 자리 누적 0.9(바탕 갈 + 선은 숯)
+  demoDur: 2.5, demoHeat: 0.65, // 시범 인두: 2.5초, 지나간 자리 누적 0.65(선은 짙은 갈, 바탕은 연갈)
   follow: 30,      // 인두가 손을 따라가는 빠르기 1-exp(-dt*k)
   dwell: 0.9,      // 멈춘 채 이 시간이 지나면 인두를 든다(초)
 };
 
-// 곱하기 색 — 한지(약 #E5D9C2) 위에 곱해지면 목표색이 되도록 맞춘 값
-const STOPS = [
-  [255, 255, 255], // 그대로
-  [226, 168, 104], // 연갈  ≈ #C68A4E
-  [150, 96, 56],   // 갈    ≈ #7A4A28
-  [92, 58, 36],    // 짙은 갈 ≈ 먹색 75% 수준
-  [26, 16, 10],    // 숯(벽화 선 자리만)
-];
+// 곱하기 색 — 한지(약 #E6DBC7) 위에 곱해져 목표색이 되도록 맞춘 값
+// 바탕은 주황기 없는 '구운 종이' 2단, 선만 짙은 갈 → 숯
+const BG = [[255, 255, 255], [232, 208, 170], [184, 140, 100]]; // 그대로 · 연갈 · 갈
+const LN_DARK = [66, 42, 28];  // 짙은 갈 ≈ #3B2416
+const LN_CHAR = [24, 15, 10];  // 숯
 
 function buildLUT() {
-  const N = 1024, VMAX = 2.4;
-  const lut = new Uint8ClampedArray(N * 3);
+  const N = 1024, VMAX = 1.6;
+  const bg = new Uint8ClampedArray(N * 3), ln = new Uint8ClampedArray(N * 4);
   for (let i = 0; i < N; i++) {
     const v = (i / (N - 1)) * VMAX;
-    let stage = 0;
-    for (const x of NK.th) stage += sstep(x - NK.w, x + NK.w, v);
-    // 첫 단계 전에도 아주 옅게 누렇게 — 손이 닿은 걸 알 수 있게
-    stage += 0.25 * sstep(0.02, NK.th[0], v) * (1 - sstep(NK.th[0] - NK.w, NK.th[0] + NK.w, v));
-    // 단계 안에서도 조금씩 진해지게(평평한 판처럼 보이지 않게)
-    const cont = clamp(v / NK.pass, 0, 4);
-    const t = clamp(stage * 0.86 + cont * 0.14, 0, 4);
-    const k = Math.min(3, Math.floor(t)), f = t - k;
-    const a = STOPS[k], b = STOPS[k + 1];
-    lut[i * 3] = a[0] + (b[0] - a[0]) * f;
-    lut[i * 3 + 1] = a[1] + (b[1] - a[1]) * f;
-    lut[i * 3 + 2] = a[2] + (b[2] - a[2]) * f;
+    // 바탕: 2단(경계는 부드럽게), 그 이상은 안 간다
+    let t = 0;
+    for (const x of NK.bgTh) t += sstep(x - NK.bgW, x + NK.bgW, v);
+    t = clamp(t * 0.85 + clamp(v / NK.bgTh[1], 0, 2) * 0.075, 0, 2);
+    const k = Math.min(1, Math.floor(t)), f = t - k;
+    for (let c = 0; c < 3; c++) bg[i * 3 + c] = BG[k][c] + (BG[k + 1][c] - BG[k][c]) * f;
+    // 선: 짙은 갈로 떠오르고 → 숯으로
+    const a = sstep(NK.lnTh[0], NK.lnTh[1], v);
+    const ch = sstep(NK.lnTh[2], NK.lnTh[3], v);
+    for (let c = 0; c < 3; c++) ln[i * 4 + c] = LN_DARK[c] + (LN_CHAR[c] - LN_DARK[c]) * ch;
+    ln[i * 4 + 3] = a * 255;
   }
-  return { lut, N, scale: (N - 1) / VMAX };
+  return { bg, ln, N, scale: (N - 1) / VMAX };
 }
 
 // 고정 씨앗 난수(그림이 매번 같게)
@@ -86,7 +82,7 @@ function coverSrc(iw, ih, w, h, fx, fy) {
 }
 
 export function createNakhwa(stage, opts = {}) {
-  const { reduceMotion = false, isTouch = false, muralSrc, tileSrc, onFirstBurn } = opts;
+  const { reduceMotion = false, isTouch = false, muralSrc, tileSrc, linesSrc, onFirstBurn } = opts;
   const paper = stage.querySelector('.nk__paper');
   const burn = stage.querySelector('.nk__burn');
   const fx = stage.querySelector('.nk__fx');
@@ -95,10 +91,10 @@ export function createNakhwa(stage, opts = {}) {
   const fctx = fx.getContext('2d');
   if (!pctx || !bctx || !fctx) throw new Error('canvas 2d 불가');
 
-  const { lut, N: LN, scale: LS } = buildLUT();
+  const { bg: BGL, ln: LNL, N: LN, scale: LS } = buildLUT();
   const debugInk = /nkdebug/.test(location.search);
 
-  let mural = null, tile = null;
+  let mural = null, tile = null, lines = null;
   let W = 0, H = 0, dpr = 1, cs = 2, fw = 0, fh = 0;
   let rect = null; // 한지 사각형(CSS px)
   let heat = null, ink = null, grain = null, mask = null, img = null;
@@ -116,8 +112,8 @@ export function createNakhwa(stage, opts = {}) {
   let acc = 0;
 
   // ───────── 준비 ─────────
-  const loaded = Promise.all([loadImage(muralSrc), loadImage(tileSrc)]).then(([m, t]) => {
-    mural = m; tile = t;
+  const loaded = Promise.all([loadImage(muralSrc), loadImage(tileSrc), loadImage(linesSrc)]).then(([m, t, l]) => {
+    mural = m; tile = t; lines = l;
     build();
     ready = true;
     startDemo();
@@ -253,76 +249,41 @@ export function createNakhwa(stage, opts = {}) {
     mask = new Float32Array(fw * fh);
     for (let i = 0; i < fw * fh; i++) mask[i] = md[i * 4 + 3] / 255;
 
-    // 벽화 → '미리 먹인 선'
+    // 벽화 선화(윤곽선) 지도 → 0~1
     ctx.clearRect(0, 0, fw, fh);
     const [fxp, fyp] = muralFocus();
     const rx = rect.x * s, ry = rect.y * s, rw = rect.w * s, rh = rect.h * s;
-    const src = coverSrc(mural.width, mural.height, rw, rh, fxp, fyp);
-    ctx.drawImage(mural, src[0], src[1], src[2], src[3], rx, ry, rw, rh);
+    const src = coverSrc(lines.width, lines.height, rw, rh, fxp, fyp);
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(lines, src[0], src[1], src[2], src[3], rx, ry, rw, rh);
     const d = ctx.getImageData(0, 0, fw, fh).data;
     const n = fw * fh;
-    const L = new Float32Array(n), red = new Float32Array(n);
-    for (let i = 0; i < n; i++) {
-      const r = d[i * 4] / 255, g = d[i * 4 + 1] / 255, b = d[i * 4 + 2] / 255;
-      L[i] = 0.299 * r + 0.587 * g + 0.114 * b;
-      red[i] = r - Math.max(g, b);
-    }
-    const M = boxBlur(boxBlur(L, fw, fh, Math.max(3, Math.round(7 / cs * 2))), fw, fh, Math.max(3, Math.round(7 / cs * 2)));
     ink = new Float32Array(n);
-    for (let i = 0; i < n; i++) {
-      const hp = sstep(0.035, 0.14, M[i] - L[i]);           // 둘레보다 어두운 곳 = 선
-      const rd = sstep(0.13, 0.28, red[i]);                  // 붉은 안료(불·고기)만
-      const dk = 0;
-      ink[i] = clamp(Math.max(hp, rd) + dk, 0, 1);
-    }
-    // 선을 둥글게 한 칸 굵히고 잡티(얼룩 점)는 지움: 흐리게 → 대비 곡선
-    const soft = boxBlur(ink, fw, fh, 1);
-    for (let i = 0; i < n; i++) ink[i] = sstep(0.12, 0.62, ink[i] * 0.5 + soft[i] * 0.75) * mask[i];
-    // 큰 숫자 '357' — 문지르면 낙인처럼 떠오른다
+    // 줄여 그리면 선이 옅어지므로 대비를 조금 올림
+    for (let i = 0; i < n; i++) ink[i] = sstep(0.1, 0.65, d[i * 4] / 255) * mask[i];
+    // '357' — 같은 선화 결로(윤곽만) 숨겨 둔다
     ctx.clearRect(0, 0, fw, fh);
-    ctx.fillStyle = '#fff';
+    ctx.strokeStyle = '#fff';
+    ctx.lineJoin = 'round';
     ctx.textBaseline = 'alphabetic';
     let size, x, y;
     if (portrait) {
       size = rw * 0.44;
-      ctx.font = `900 ${size}px "Pretendard Variable", Pretendard, sans-serif`;
       ctx.textAlign = 'center';
       x = rx + rw * 0.5; y = ry + rh * 0.955;
     } else {
       size = rh * 0.40;
-      ctx.font = `900 ${size}px "Pretendard Variable", Pretendard, sans-serif`;
       ctx.textAlign = 'right';
       x = rx + rw * 0.965; y = ry + rh * 0.95;
     }
-    ctx.fillText('357', x, y);
+    ctx.font = `900 ${size}px "Pretendard Variable", Pretendard, sans-serif`;
+    ctx.lineWidth = Math.max(1.6, size * 0.03);
+    ctx.strokeText('357', x, y);
     const td = ctx.getImageData(0, 0, fw, fh).data;
     for (let i = 0; i < n; i++) {
       const a = td[i * 4 + 3] / 255;
-      if (a > 0) ink[i] = Math.max(ink[i], a * 0.92 * mask[i]);
+      if (a > 0) ink[i] = Math.max(ink[i], a * mask[i]);
     }
-  }
-
-  function boxBlur(src, w, h, r) {
-    const tmp = new Float32Array(w * h), out = new Float32Array(w * h);
-    const inv = 1 / (r * 2 + 1);
-    for (let y = 0; y < h; y++) {
-      let acc = 0;
-      const row = y * w;
-      for (let x = -r; x <= r; x++) acc += src[row + clamp(x, 0, w - 1)];
-      for (let x = 0; x < w; x++) {
-        tmp[row + x] = acc * inv;
-        acc += src[row + Math.min(w - 1, x + r + 1)] - src[row + Math.max(0, x - r)];
-      }
-    }
-    for (let x = 0; x < w; x++) {
-      let acc = 0;
-      for (let y = -r; y <= r; y++) acc += tmp[clamp(y, 0, h - 1) * w + x];
-      for (let y = 0; y < h; y++) {
-        out[y * w + x] = acc * inv;
-        acc += tmp[Math.min(h - 1, y + r + 1) * w + x] - tmp[Math.max(0, y - r) * w + x];
-      }
-    }
-    return out;
   }
 
   // 그을림이 고르지 않게 — 낮은 주파수 얼룩(0.86~1.14)
@@ -399,13 +360,16 @@ export function createNakhwa(stage, opts = {}) {
     for (let y = y0; y < y1; y++) {
       let i = y * fw + x0;
       for (let x = x0; x < x1; x++, i++) {
-        const v = heat[i] * (NK.base + NK.lineGain * ink[i]) * grain[i];
-        let li = (v * LS) | 0;
+        const h = heat[i] * grain[i];
+        let bi = (h * NK.base * LS) | 0;
+        if (bi > LN - 1) bi = LN - 1;
+        let li = (h * NK.lineGain * ink[i] * LS) | 0;
         if (li > LN - 1) li = LN - 1;
-        const o = i << 2, l = li * 3;
-        data[o] = lut[l];
-        data[o + 1] = lut[l + 1];
-        data[o + 2] = lut[l + 2];
+        const o = i << 2, b3 = bi * 3, l4 = li << 2;
+        const a = LNL[l4 + 3] / 255;
+        data[o] = BGL[b3] + (LNL[l4] - BGL[b3]) * a;
+        data[o + 1] = BGL[b3 + 1] + (LNL[l4 + 1] - BGL[b3 + 1]) * a;
+        data[o + 2] = BGL[b3 + 2] + (LNL[l4 + 2] - BGL[b3 + 2]) * a;
       }
     }
     bctx.putImageData(img, 0, 0, x0, y0, x1 - x0, y1 - y0);
@@ -414,8 +378,8 @@ export function createNakhwa(stage, opts = {}) {
   // ───────── 시범 인두(S자) ─────────
   function buildDemoPath() {
     const wp = portrait
-      ? [[0.30, 0.06], [0.72, 0.22], [0.80, 0.40], [0.50, 0.50], [0.20, 0.58], [0.26, 0.74], [0.56, 0.84], [0.80, 0.90]]
-      : [[0.04, 0.30], [0.16, 0.52], [0.26, 0.60], [0.38, 0.47], [0.47, 0.42], [0.57, 0.56], [0.70, 0.78], [0.86, 0.80], [0.97, 0.70]];
+      ? [[0.05, 0.30], [0.10, 0.44], [0.20, 0.56], [0.40, 0.50], [0.62, 0.40], [0.95, 0.40], [0.96, 0.46], [0.66, 0.47], [0.64, 0.54], [0.96, 0.54], [0.96, 0.61], [0.66, 0.62]]
+      : [[0.07, 0.50], [0.15, 0.44], [0.21, 0.58], [0.30, 0.50], [0.36, 0.41], [0.49, 0.41], [0.51, 0.50], [0.37, 0.53], [0.35, 0.62], [0.50, 0.63]];
     const P = wp.map(([u, v]) => [rect.x + u * rect.w, rect.y + v * rect.h]);
     const pts = [];
     for (let i = 0; i < P.length - 1; i++) {
@@ -687,12 +651,13 @@ export function createNakhwa(stage, opts = {}) {
 
   // 검수용: 현재 숫자와 상태
   function stats() {
-    let s1 = 0, s2 = 0, s3 = 0;
+    let bg1 = 0, bg2 = 0, lnDark = 0, lnChar = 0;
     for (let i = 0; i < heat.length; i++) {
-      const v = heat[i] * (NK.base + NK.lineGain * ink[i]);
-      if (v > NK.th[2]) s3++; else if (v > NK.th[1]) s2++; else if (v > NK.th[0]) s1++;
+      const b = heat[i] * NK.base, l = heat[i] * NK.lineGain * ink[i];
+      if (b > NK.bgTh[1]) bg2++; else if (b > NK.bgTh[0]) bg1++;
+      if (l > NK.lnTh[3]) lnChar++; else if (l > NK.lnTh[1]) lnDark++;
     }
-    return { W, H, fw, fh, cs, radius: Math.round(radius), sigma: Math.round(sigma), stage1: s1, stage2: s2, stage3: s3, demoR: +demo.R.toFixed(2) };
+    return { W, H, fw, fh, cs, radius: Math.round(radius), sigma: Math.round(sigma), bg1, bg2, lnDark, lnChar, demoR: +demo.R.toFixed(2) };
   }
 
   return { update, reset, resize, loaded, stats, get ready() { return ready; } };
