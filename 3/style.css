@@ -123,17 +123,18 @@ button { cursor: pointer; }
 
 /* ───────── 첫 화면 ───────── */
 .hero {
-  display: grid; grid-template-columns: minmax(400px, 39%) 1fr; min-height: max(640px, 100svh);
+  --hero-gutter: max(var(--pad), calc((100vw - var(--wrap)) / 2));
+  display: grid; grid-template-columns: calc(var(--hero-gutter) + clamp(440px, 40vw, 600px)) 1fr; min-height: max(640px, 100svh);
   padding-top: var(--hd-h);
 }
 .hero-copy {
   display: flex; flex-direction: column; justify-content: center;
-  padding: 48px 48px 64px max(var(--pad), calc((100vw - var(--wrap)) / 2));
+  padding: 48px 56px 64px var(--hero-gutter);
 }
 .hero-kicker { margin: 0 0 18px; font-size: 16px; font-weight: 600; color: var(--soil); }
 .hero-title { margin: 0; font-size: clamp(54px, 5.6vw, 84px); line-height: 1.12; font-weight: 800; letter-spacing: -0.035em; }
 .hero-title .ln { display: block; overflow: hidden; padding-bottom: .04em; }
-.hero-title .ln > span { display: block; animation: rise .9s var(--ease) both; }
+.hero-title .ln > span { display: block; white-space: nowrap; animation: rise .9s var(--ease) both; }
 .hero-title .ln + .ln > span { animation-delay: .12s; color: var(--fire); }
 @keyframes rise { from { transform: translateY(105%); } to { transform: none; } }
 .hero-sub { margin: 18px 0 0; font-size: 24px; font-weight: 650; letter-spacing: -0.02em; }
@@ -154,16 +155,9 @@ button { cursor: pointer; }
 .today-head h2 { margin: 0; font-size: 18px; font-weight: 750; letter-spacing: -0.02em; }
 .today-date { margin: 0; font-size: 14.5px; color: var(--ink-2); }
 .today-status { margin: 14px 0 0; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; }
-.today-status .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--soil); position: relative; flex: none; }
 .today-status strong { font-size: 26px; line-height: 1.25; font-weight: 800; letter-spacing: -0.025em; }
-.today-when { font-size: 15.5px; color: var(--ink-2); flex-basis: 100%; padding-left: 22px; }
-.today-status[data-state="open"] .dot { background: var(--fire); }
+.today-when { font-size: 15.5px; color: var(--ink-2); flex-basis: 100%; }
 .today-status[data-state="open"] strong { color: var(--fire); }
-.today-status[data-state="open"] .dot::after {
-  content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--fire);
-  animation: ping 2.4s var(--ease) infinite;
-}
-@keyframes ping { 0% { transform: scale(1); opacity: .45; } 70%, 100% { transform: scale(2.4); opacity: 0; } }
 .today-info { margin: 14px 0 0; padding: 12px 0 0; border-top: 1px solid var(--line); display: grid; gap: 6px; }
 .today-info > div { display: grid; grid-template-columns: 76px 1fr; gap: 8px; font-size: 15.5px; line-height: 1.45; }
 .today-info dt { color: var(--ink-2); }
