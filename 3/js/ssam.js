@@ -7,6 +7,9 @@
   const stage = document.getElementById('ssamStage');
   if (!stage) return;
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  /* 등장: 상자가 보이면 다섯 재료가 바깥에서 날아와 제자리에(스프링) — 모션이 켜졌을 때만 */
+  let introDone = !(document.documentElement.classList.contains('mo') && !reduce);
+  const K_INTRO = 150, Z_INTRO = 0.62;
   const meatEl = stage.querySelector('.ssam-meat');
   const doneEl = document.getElementById('ssamDone');
   const againEl = document.getElementById('ssamAgain');
@@ -111,6 +114,10 @@
       if (p.placed) {
         const [sx, sy, sr] = slotOf(p);
         p.x = sx; p.y = sy; p.r = sr; p.mode = 'slot'; p.arrived = true;
+      } else if (!introDone) {
+        const dx = p.hx - cx, dy = p.hy - cy, L = Math.hypot(dx, dy) || 1;
+        const far = Math.max(W, H) * 0.55 + Math.max(p.w, p.h);
+        p.x = p.hx + (dx / L) * far; p.y = p.hy + (dy / L) * far; p.r = p.hr + (dx > 0 ? 40 : -40); p.mode = 'wait';
       } else {
         p.x = p.hx; p.y = p.hy; p.r = p.hr; p.mode = 'home';
       }
@@ -270,6 +277,12 @@
           p.s = 0.96; p.vs = 0;               // 놓이는 순간 살짝 눌림
           checkDone();
         }
+      } else if (p.mode === 'intro') {
+        if (p.delay > 0) p.delay -= DT;
+        else {
+          springTo(p, p.hx, p.hy, p.hr, K_INTRO, Z_INTRO);
+          if (Math.hypot(p.hx - p.x, p.hy - p.y) < 6 && Math.hypot(p.vx, p.vy) < 300) { p.mode = 'home'; p.s = 0.96; p.vs = 0; }
+        }
       } else if (p.mode === 'home') {
         springTo(p, p.hx, p.hy, p.hr, K_HOME, Z_HOME);
       } else if (p.mode === 'free') {
@@ -332,11 +345,38 @@
     if (!raf && visible) { last = performance.now(); raf = requestAnimationFrame(frame); }
   }
 
+  function startIntro() {
+    if (introDone) return;
+    introDone = true;
+    pieces.forEach((p, i) => { if (p.mode === 'wait') { p.mode = 'intro'; p.delay = 0.06 + i * 0.09; } });
+    wake();
+  }
+  function finishIntro() {
+    if (introDone) return;
+    introDone = true;
+    pieces.forEach((p) => {
+      if (p.mode === 'wait' || p.mode === 'intro') {
+        p.x = p.px = p.hx; p.y = p.py = p.hy; p.r = p.pr = p.hr; p.vx = p.vy = p.vr = 0; p.mode = 'home';
+      }
+    });
+    draw(1, 0);
+  }
+  document.addEventListener('mo:flush', () => {
+    if (introDone) return;
+    const r = stage.getBoundingClientRect();
+    if (r.bottom < 0) finishIntro();
+    else if (r.top < window.innerHeight) startIntro();
+  });
   const io = new IntersectionObserver((ents) => {
-    visible = ents[0].isIntersecting;
+    const en = ents[ents.length - 1];
+    visible = en.isIntersecting;
+    if (!introDone) {
+      if (en.boundingClientRect.bottom < 0) finishIntro();
+      else if (en.intersectionRatio >= 0.3) startIntro();
+    }
     if (visible) wake();
     else if (raf) { cancelAnimationFrame(raf); raf = 0; }
-  }, { rootMargin: '80px 0px' });
+  }, { rootMargin: '80px 0px', threshold: [0, 0.3] });
   io.observe(stage);
 
   /* ── 리사이즈: 200ms 디바운스, 폭이 같으면 다시 계산 안 함 ── */

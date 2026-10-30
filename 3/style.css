@@ -33,7 +33,7 @@ button { cursor: pointer; }
 .skip:focus { top: 12px; }
 :focus-visible { outline: 2px solid var(--fire); outline-offset: 3px; }
 
-.ic { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.ic { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; flex: none; transition: transform .3s cubic-bezier(.16, 1, .3, 1); }
 
 .wrap { width: 100%; max-width: calc(var(--wrap) + var(--pad) * 2); margin: 0 auto; padding: 0 var(--pad); }
 
@@ -197,13 +197,20 @@ button { cursor: pointer; }
 .panel[data-n="2"] { --n: 2; }
 .panel[data-n="3"] { --n: 3; }
 .panel[data-n="4"] { --n: 4; }
-.panel.is-in .dish { animation: dishIn .42s var(--ease) both; }
-.panel.is-in .dish:nth-child(2) { animation-delay: .04s; }
-.panel.is-in .dish:nth-child(3) { animation-delay: .08s; }
-.panel.is-in .dish:nth-child(4) { animation-delay: .12s; }
-@keyframes dishIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+/* 메뉴 카드: 상에 접시를 내려놓듯(살짝 지나쳤다 제자리) — 탭 바꿀 때도 같은 방식 */
+.panel.is-in .dish { animation: plate .78s cubic-bezier(.2, .7, .2, 1) both; }
+.panel.is-in .dish:nth-child(2) { animation-delay: 70ms; }
+.panel.is-in .dish:nth-child(3) { animation-delay: 140ms; }
+.panel.is-in .dish:nth-child(4) { animation-delay: 210ms; }
+@keyframes plate {
+  0% { opacity: 0; translate: 0 calc(var(--pd, 26px) * -1); }
+  55% { opacity: 1; translate: 0 calc(var(--pd, 26px) * .16); }
+  80% { translate: 0 calc(var(--pd, 26px) * -.04); }
+  100% { opacity: 1; translate: 0 0; }
+}
+html.mo .panel:not([hidden]):not(.is-in) .dish { opacity: 0; }
 .dish { margin: 0; display: flex; flex-direction: column; min-width: 0; }
-.dish > img, .dish-ph { width: 100%; height: 260px; object-fit: cover; border-radius: 6px; background: #ece7df; }
+.dish img, .dish-ph { width: 100%; height: 260px; object-fit: cover; border-radius: 6px; background: #ece7df; }
 .dish-ph { display: flex; align-items: center; justify-content: center; background: var(--paper); }
 .dish-ph span { font-size: 30px; font-weight: 800; color: var(--soil); letter-spacing: -0.02em; }
 .dish-body { padding: 14px 2px 0; display: flex; flex-direction: column; flex: 1; }
@@ -355,7 +362,7 @@ button { cursor: pointer; }
 .voice-form[hidden] { display: none; }
 .voice-form .btn { justify-self: start; }
 .store-card { border: 1.5px solid var(--ink); border-radius: 12px; overflow: hidden; }
-.store-card > img { width: 100%; height: 220px; object-fit: cover; }
+.store-card img { width: 100%; height: 220px; object-fit: cover; }
 .store-body { padding: 22px 24px 24px; }
 .store-body h4 { margin: 0; font-size: 22px; font-weight: 800; }
 .store-addr { margin: 6px 0 14px; font-size: 16px; }
@@ -428,7 +435,7 @@ body.cbar-on .ft { padding-bottom: 136px; }
   .hd-fr { display: none; }
   .ssam { grid-template-columns: 290px 1fr; }
   .panel { gap: 14px; }
-  .dish > img, .dish-ph { height: 220px; }
+  .dish img, .dish-ph { height: 220px; }
 }
 @media (max-width: 1023px) {
   :root { --hd-h: 68px; --pad: 28px; }
@@ -505,8 +512,8 @@ body.cbar-on .ft { padding-bottom: 136px; }
   .panel[hidden] { display: none; }
   .dish { flex: none; width: 74vw; max-width: 300px; scroll-snap-align: start; }
   .panel[data-n="2"] .dish { width: calc(50vw - 26px); }
-  .dish > img, .dish-ph { height: 180px; }
-  .panel[data-n="2"] .dish > img { height: 150px; }
+  .dish img, .dish-ph { height: 180px; }
+  .panel[data-n="2"] .dish img { height: 150px; }
   .dish h3 { font-size: 17px; }
   .dish-body > p:not(.price) { font-size: 15px; }
   .price { font-size: 20px; }
@@ -566,7 +573,7 @@ body.cbar-on .ft { padding-bottom: 136px; }
   .comm-left { gap: 36px; }
   .notice a { flex-direction: column; align-items: flex-start; gap: 2px; min-height: 0; }
   .nt { font-size: 15.5px; }
-  .store-card > img { height: 180px; }
+  .store-card img { height: 180px; }
   .store-body { padding: 18px; }
   .store-btns { grid-template-columns: 1fr; }
 
@@ -594,3 +601,88 @@ body.cbar-on .ft { padding-bottom: 136px; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+
+/* ═════════ 요소별 인터랙션 (js/motion.js) — 숨김은 html.mo 아래에서만 ═════════ */
+:root { --pd: 26px; --mv: 16px; --mv2: 28px; --mx: -24px; --ez: cubic-bezier(.16, 1, .3, 1); }
+@media (hover: none), (pointer: coarse) { :root { --pd: 13px; --mv: 8px; --mv2: 14px; --mx: -12px; } }
+.mo-now, .mo-now * { transition: none !important; animation: none !important; }
+
+/* 큰 제목: 줄마다 선 아래에서(90ms 시차, 0.9s) */
+.mo-l { display: block; overflow: hidden; padding-bottom: .1em; margin-bottom: -.1em; }
+.mo-li { display: block; transition: transform .9s var(--ez), opacity .9s var(--ez); transition-delay: calc(var(--l, 0) * 90ms); }
+html.mo .mo-ti:not(.mo-in) .mo-li { transform: translateY(105%); }
+@media (hover: none), (pointer: coarse) { html.mo .mo-ti:not(.mo-in) .mo-li { transform: translateY(55%); opacity: 0; } }
+
+/* 작은 글·목록: 16px 아래에서, 차례로 */
+.mo-t { transition: opacity .6s var(--ez), transform .6s var(--ez); transition-delay: var(--d, 0ms); }
+.ssam-legend li.mo-t { transition: opacity .6s var(--ez), transform .6s var(--ez); transition-delay: var(--d, 0ms); }
+html.mo .mo-t:not(.mo-in) { opacity: 0; transform: translateY(var(--mv)); }
+
+/* 사업 줄: 왼쪽에서 */
+.mo-r { transition: opacity .6s var(--ez), transform .7s var(--ez); transition-delay: var(--d, 0ms); }
+html.mo .mo-r:not(.mo-in) { opacity: 0; transform: translateX(var(--mx)); }
+
+/* 카드(굽는 법 사진 칸·매장 카드·공간 사진 칸): 아래에서 + 기울기·눌림 */
+.mo-c { transition: opacity .7s var(--ez) var(--d, 0ms), translate .8s var(--ez) var(--d, 0ms), transform .35s var(--ez), scale .15s ease-out; }
+html.mo .mo-c:not(.mo-in) { opacity: 0; translate: 0 var(--mv2); }
+.dish { transition: transform .35s var(--ez), scale .15s ease-out; }
+.dish:active, .store-card:active, .step:active, .rail li:active { scale: .97; }
+
+/* 사진: 가림막 걷힘 + 안쪽 1.08→1 (1.1s), 올리면 1.04 */
+.mo-ph { display: block; overflow: hidden; transition: clip-path 1.1s var(--ez) var(--d, 0ms); }
+html.mo .mo-ph[data-dir="l"]:not(.mo-in) { clip-path: inset(0 100% 0 0); }
+html.mo .mo-ph[data-dir="u"]:not(.mo-in) { clip-path: inset(100% 0 0 0); }
+.mo-ph img { --ps: 1; transform: scale(var(--ps)); transition: transform 1.1s var(--ez) var(--d, 0ms); }
+html.mo .mo-ph:not(.mo-in) img { transform: scale(calc(var(--ps) * 1.08)); }
+.mo-ph.mo-done img { transition: transform .7s var(--ez); }
+.mo-num { display: inline-block; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* 버튼 자석(translate는 JS) — 눌림·아이콘과 따로 */
+.mo-mag { transition: transform .18s var(--ease), opacity .18s var(--ease), translate .45s var(--ez); }
+
+/* 사업 줄: 올리면 불 선이 그려지고 이름이 밀림 */
+.biz li { position: relative; }
+.biz li::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--fire); transform: scaleX(0); transform-origin: left; transition: transform .5s var(--ez); }
+.biz h4 { transition: transform .35s var(--ez); }
+/* 공지: 밑줄이 그려짐 · 꼬리말 링크 · 머리글 현재 구역 */
+.notice a { position: relative; }
+.notice a::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--ink); transform: scaleX(0); transform-origin: left; transition: transform .45s var(--ez); }
+.notice a:focus-visible::after { transform: scaleX(1); }
+.ft a { position: relative; }
+.ft a::after { content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 1.5px; background: currentColor; transform: scaleX(0); transform-origin: left; transition: transform .35s var(--ez); }
+.gnb-top { position: relative; }
+.gnb-top::after { content: ""; position: absolute; left: 16px; right: 16px; bottom: 16px; height: 2px; background: var(--fire); transform: scaleX(0); transform-origin: left; transition: transform .4s var(--ez); }
+.gnb-top.is-cur::after { transform: scaleX(1); }
+/* 폼 칸: 포커스 시 라벨이 밀리고 불색 */
+.fld > span { transition: transform .3s var(--ez); }
+.fld:focus-within > span { transform: translateX(4px); color: var(--fire); }
+/* 앱바·머리글 아이콘: 누르면 0.9 → 1 */
+.appbar a:active .ic, .hd-burger:active .ic, .rbtn:active .ic { transform: scale(.9); }
+
+@media (hover: hover) and (pointer: fine) {
+  .mo-ph img { --ps: 1.1; }
+  .mo-hz:hover .mo-ph img, .rail li:hover .mo-ph img, .step:hover .mo-ph img { transform: scale(calc(var(--ps) * 1.04)); }
+  .dish:hover h3 { color: var(--fire); }
+  .store-card:hover { border-color: var(--fire); }
+  .tab:hover { color: var(--ink); }
+  .sec .btn:hover .ic, .hd-actions .btn:hover .ic, .cbar .btn:hover .ic { transform: translateX(3px); }
+  .rbtn[data-dir="1"]:hover .ic { transform: translateX(2px); }
+  .rbtn[data-dir="-1"]:hover .ic { transform: translateX(-2px); }
+  .biz li:hover::after { transform: scaleX(1); }
+  .biz li:hover h4 { transform: translateX(6px); }
+  .biz li:hover .st { color: var(--ink); }
+  .hist li:hover .num { color: var(--fire); }
+  .notice a:hover::after { transform: scaleX(1); }
+  .ft a:hover::after { transform: scaleX(1); }
+  .gnb-top:hover::after { transform: scaleX(1); }
+  .fld input:hover, .fld textarea:hover { border-color: rgba(34, 34, 34, .4); }
+  .vision:hover h3 { color: var(--fire); }
+  .rail.mo-drag { cursor: grab; }
+  .rail.is-grab { cursor: grabbing; }
+  .rail.is-grab img { pointer-events: none; }
+}
+
+/* 쌈 조각: 위치는 ssam.js, 올리면 안쪽 그림만 살짝 들림 */
+.piece img { transition: transform .25s var(--ez); }
+@media (hover: hover) and (pointer: fine) { .piece:not(.is-placed):not(.is-drag):hover img { transform: scale(1.05) rotate(-2deg); } }

@@ -117,9 +117,18 @@ const steps = $$('.mf__step');
 const bars = $$('.mf__bar i');
 let filmOn = false;
 let filmStep = 0;
+// 스크립트가 켜지고 PC이며 움직임 줄이기가 아닐 때만 화면에 붙는 영화. 아니면 세 단계가 세로로 다 보인다.
+const filmMode = () => !reduceMotion && !phoneMQ.matches;
+function setFilm() {
+  const on = filmMode();
+  film.classList.toggle('mf--film', on);
+  if (!on) photos.forEach((ph) => { ph.style.opacity = ''; ph.style.transform = ''; ph.style.visibility = ''; });
+}
+setFilm();
+phoneMQ.addEventListener('change', setFilm);
 new IntersectionObserver(([en]) => { filmOn = en.isIntersecting; }, { rootMargin: '100px 0px' }).observe(film);
 tasks.add(() => {
-  if (!filmOn || phoneMQ.matches) return;
+  if (!filmOn || !film.classList.contains('mf--film')) return;
   const r = track.getBoundingClientRect();
   const span = r.height - window.innerHeight;
   const p = clamp(-r.top / Math.max(1, span), 0, 1);
@@ -127,6 +136,8 @@ tasks.add(() => {
   const o2 = sstep(0.60, 0.73, p);
   photos[1].style.opacity = o1.toFixed(3);
   photos[2].style.opacity = o2.toFixed(3);
+  photos[1].style.visibility = o1 > 0.002 ? 'visible' : 'hidden';
+  photos[2].style.visibility = o2 > 0.002 ? 'visible' : 'hidden';
   photos.forEach((ph, i) => {
     const local = clamp(p * 3 - i, 0, 1);
     ph.style.transform = reduceMotion ? '' : `scale(${(1.08 - local * 0.08).toFixed(4)})`;
