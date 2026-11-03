@@ -84,6 +84,7 @@ document.addEventListener('click', (e) => {
 // ───────── 2. 낙화 무대 ─────────
 const stageEl = $('#nakhwa');
 const hint = $('.nk__hint', stageEl);
+const ocEl = $('.nk__oc', stageEl);
 let nk = null;
 try {
   nk = createNakhwa(stageEl, {
@@ -93,6 +94,11 @@ try {
     tileSrc: '../assets/art/hanji_linen_tile.jpg',
     linesSrc: 'img/anak3_lines.png',
     onFirstBurn: () => hint.classList.add('is-off'),
+    onOrigin: () => {
+      stageEl.classList.add('is-origin');
+      hint.classList.add('is-off');
+      ocEl.hidden = false;
+    },
   });
   nk.loaded.catch((err) => { console.warn(err); stageEl.classList.add('is-still'); });
 } catch (err) {
@@ -104,79 +110,11 @@ if (nk) {
   tasks.add((dt) => { if (visible) nk.update(dt); });
   $('.nk__reset').addEventListener('click', () => {
     hint.classList.remove('is-off');
+    stageEl.classList.remove('is-origin');
+    ocEl.hidden = true;
     nk.reset();
   });
   window.__nk = { NK, stats: () => nk.stats() };
-
-  const originEl = $('.nk__origin', stageEl);
-  const ocEl = $('.nk__oc', stageEl);
-  const COV_W = 32;
-  const COV_H = 16;
-  const COV_DONE = 0.6;
-  const cov = new Uint8Array(COV_W * COV_H);
-  let covN = 0;
-  let opened = false;
-  const placeOrigin = () => {
-    const W = stageEl.clientWidth;
-    const H = stageEl.clientHeight;
-    if (!W || !H) return;
-    const portrait = W / H < 1.1;
-    const pad = portrait ? 6 : Math.max(8, Math.round(W * 0.006));
-    Object.assign(originEl.style, {
-      left: `${pad}px`, top: `${pad}px`, width: `${W - pad * 2}px`, height: `${H - pad * 2}px`,
-      objectPosition: portrait ? '21% 50%' : '50% 42%',
-    });
-  };
-  const openOrigin = () => {
-    opened = true;
-    stageEl.classList.add('is-origin');
-    ocEl.hidden = false;
-    hint.classList.add('is-off');
-  };
-  const closeOrigin = () => {
-    opened = false;
-    cov.fill(0);
-    covN = 0;
-    stageEl.classList.remove('is-origin');
-    stageEl.style.removeProperty('--og');
-    ocEl.hidden = true;
-  };
-  const rub = (e) => {
-    if (opened || !nk.ready) return;
-    const r = stageEl.getBoundingClientRect();
-    if (!r.width || !r.height) return;
-    const x = e.clientX - r.left;
-    const y = e.clientY - r.top;
-    const rad = Math.min(Math.max(r.width * NK.radiusFrac, NK.radiusMin), NK.radiusMax) * 1.5;
-    const cw = r.width / COV_W;
-    const ch = r.height / COV_H;
-    let hit = 0;
-    for (let gy = 0; gy < COV_H; gy++) {
-      const yy = (gy + 0.5) * ch;
-      if (Math.abs(yy - y) > rad) continue;
-      for (let gx = 0; gx < COV_W; gx++) {
-        const i = gy * COV_W + gx;
-        if (cov[i]) continue;
-        const xx = (gx + 0.5) * cw;
-        if ((xx - x) * (xx - x) + (yy - y) * (yy - y) <= rad * rad) {
-          cov[i] = 1;
-          covN++;
-          hit++;
-        }
-      }
-    }
-    if (!hit) return;
-    const p = covN / cov.length;
-    stageEl.style.setProperty('--og', (0.3 * Math.min(1, p / COV_DONE)).toFixed(3));
-    if (p >= COV_DONE) openOrigin();
-  };
-  if (originEl && ocEl) {
-    placeOrigin();
-    let rt = 0;
-    window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(placeOrigin, 200); });
-    stageEl.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse' || e.buttons) rub(e); }, { passive: true });
-    $('.nk__reset').addEventListener('click', closeOrigin);
-  }
 }
 
 // ───────── 4. 3단 마이야르: 화면에 붙는 구간(PC만) ─────────

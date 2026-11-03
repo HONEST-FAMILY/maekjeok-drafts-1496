@@ -20,6 +20,12 @@ export const NK = {
   demoDur: 2.5, demoHeat: 0.65, // 시범 인두: 2.5초, 지나간 자리 누적 0.65(선은 짙은 갈, 바탕은 연갈)
   follow: 30,      // 인두가 손을 따라가는 빠르기 1-exp(-dt*k)
   dwell: 0.9,      // 멈춘 채 이 시간이 지나면 인두를 든다(초)
+  wearCap: 1.2,
+  rvTh: [0.3, 0.7],
+  srcTh: 0.1,
+  openAfter: 6,
+  spread: 1.5,
+  rise: 0.6,
 };
 
 // 곱하기 색 — 한지(약 #E6DBC7) 위에 곱해져 목표색이 되도록 맞춘 값
@@ -82,12 +88,14 @@ function coverSrc(iw, ih, w, h, fx, fy) {
 }
 
 export function createNakhwa(stage, opts = {}) {
-  const { reduceMotion = false, isTouch = false, muralSrc, tileSrc, linesSrc, onFirstBurn } = opts;
+  const { reduceMotion = false, isTouch = false, muralSrc, tileSrc, linesSrc, onFirstBurn, onOrigin } = opts;
   const paper = stage.querySelector('.nk__paper');
   const burn = stage.querySelector('.nk__burn');
+  const reveal = stage.querySelector('.nk__reveal');
   const fx = stage.querySelector('.nk__fx');
   const pctx = paper.getContext('2d');
   const bctx = burn.getContext('2d', { willReadFrequently: false });
+  const rctx = reveal ? reveal.getContext('2d') : null;
   const fctx = fx.getContext('2d');
   if (!pctx || !bctx || !fctx) throw new Error('canvas 2d 불가');
 
@@ -98,9 +106,12 @@ export function createNakhwa(stage, opts = {}) {
   let W = 0, H = 0, dpr = 1, cs = 2, fw = 0, fh = 0;
   let rect = null; // 한지 사각형(CSS px)
   let heat = null, ink = null, grain = null, mask = null, img = null;
+  let wear = null, muralBuf = null, rvMask = null, rvCtx = null, rvImg = null, rvDirty = false, paperN = 1, rubRate = 1;
   let radius = 40, sigma = 20, portrait = false;
   let dirty = null;
   let ready = false;
+  const open = { t: -1, at: null, end: 0 };
+  let opened = false, chk = 0;
 
   const iron = { x: 0, y: 0, tx: 0, ty: 0, on: false, act: 0, shown: 0, still: 0, down: false, mouse: false };
   const demo = { t: -1, pts: null, len: null, total: 0, R: 0 };
@@ -142,9 +153,11 @@ export function createNakhwa(stage, opts = {}) {
     burn.height = fh;
 
     heat = new Float32Array(fw * fh);
+    wear = new Float32Array(fw * fh);
     buildMaskAndInk();
     buildGrain();
     drawPaper();
+    buildReveal();
     img = bctx.createImageData(fw, fh);
     img.data.fill(255);
     if (debugInk) {
@@ -155,7 +168,45 @@ export function createNakhwa(stage, opts = {}) {
     }
     bctx.putImageData(img, 0, 0);
     dirty = null;
+    if (opened || open.t >= 0) finishOpen();
     buildDemoPath();
+  }
+
+  function buildReveal() {
+    paperN = 0;
+    for (let i = 0; i < mask.length; i++) if (mask[i] >= 0.5) paperN++;
+    paperN = Math.max(1, paperN);
+    rubRate = NK.pass * Math.sqrt(2 * Math.PI) * sigma * (isTouch ? NK.speedTouch : NK.speedPC) / (rect.w * rect.h);
+    if (!rctx) return;
+    reveal.width = paper.width;
+    reveal.height = paper.height;
+    muralBuf = document.createElement('canvas');
+    muralBuf.width = paper.width;
+    muralBuf.height = paper.height;
+    const mctx = muralBuf.getContext('2d');
+    mctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    deckle(mctx, 1);
+    mctx.clip();
+    const [fxp, fyp] = muralFocus();
+    const s = coverSrc(mural.width, mural.height, rect.w, rect.h, fxp, fyp);
+    mctx.imageSmoothingQuality = 'high';
+    mctx.drawImage(mural, s[0], s[1], s[2], s[3], rect.x, rect.y, rect.w, rect.h);
+    rvMask = document.createElement('canvas');
+    rvMask.width = fw;
+    rvMask.height = fh;
+    rvCtx = rvMask.getContext('2d');
+    rvImg = rvCtx.createImageData(fw, fh);
+    rvDirty = true;
+  }
+
+  function drawReveal() {
+    rvDirty = false;
+    if (!rctx) return;
+    rctx.globalCompositeOperation = 'copy';
+    rctx.drawImage(rvMask, 0, 0, fw * cs * dpr, fh * cs * dpr);
+    rctx.globalCompositeOperation = 'source-in';
+    rctx.drawImage(muralBuf, 0, 0);
+    rctx.globalCompositeOperation = 'source-over';
   }
 
   // 한지 가장자리(손으로 뜬 종이처럼 살짝 울퉁불퉁)
@@ -307,7 +358,7 @@ export function createNakhwa(stage, opts = {}) {
   }
 
   // ───────── 열 더하기 ─────────
-  function stamp(cx, cy, amt) {
+  function stamp(cx, cy, amt, user) {
     const s = sigma / cs;
     const fxp = cx / cs, fyp = cy / cs;
     const r = Math.ceil(s * 2.6);
@@ -325,9 +376,11 @@ export function createNakhwa(stage, opts = {}) {
         if (d2 > r2) continue;
         const m = mask[i];
         if (m <= 0) continue;
+        const g = amt * Math.exp(-d2 * inv) * m;
+        if (user) wear[i] = Math.min(NK.wearCap, wear[i] + g);
         const h0 = heat[i];
         if (h0 >= NK.cap) continue;
-        const h1 = Math.min(NK.cap, h0 + amt * Math.exp(-d2 * inv) * m);
+        const h1 = Math.min(NK.cap, h0 + g);
         heat[i] = h1;
         added += h1 - h0;
       }
@@ -343,13 +396,13 @@ export function createNakhwa(stage, opts = {}) {
   }
 
   // 선분을 따라 여러 번 찍어 빠른 손놀림에도 끊기지 않게 (dt 기준 → 느릴수록 더 탄다)
-  function burnSegment(x0, y0, x1, y1, amount) {
+  function burnSegment(x0, y0, x1, y1, amount, user) {
     const dist = Math.hypot(x1 - x0, y1 - y0);
     const n = Math.max(1, Math.ceil(dist / (sigma * 0.35)));
     let added = 0;
     for (let k = 0; k < n; k++) {
       const t = (k + 0.5) / n;
-      added += stamp(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t, amount / n);
+      added += stamp(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t, amount / n, user);
     }
     return added;
   }
@@ -357,6 +410,7 @@ export function createNakhwa(stage, opts = {}) {
   function renderRect(x0, y0, x1, y1) {
     if (debugInk) return;
     const data = img.data;
+    const rd = rvImg ? rvImg.data : null;
     for (let y = y0; y < y1; y++) {
       let i = y * fw + x0;
       for (let x = x0; x < x1; x++, i++) {
@@ -370,9 +424,14 @@ export function createNakhwa(stage, opts = {}) {
         data[o] = BGL[b3] + (LNL[l4] - BGL[b3]) * a;
         data[o + 1] = BGL[b3 + 1] + (LNL[l4 + 1] - BGL[b3 + 1]) * a;
         data[o + 2] = BGL[b3 + 2] + (LNL[l4 + 2] - BGL[b3 + 2]) * a;
+        if (rd) rd[o + 3] = sstep(NK.rvTh[0], NK.rvTh[1], wear[i] * grain[i]) * 255;
       }
     }
     bctx.putImageData(img, 0, 0, x0, y0, x1 - x0, y1 - y0);
+    if (rd) {
+      rvCtx.putImageData(rvImg, 0, 0, x0, y0, x1 - x0, y1 - y0);
+      rvDirty = true;
+    }
   }
 
   // ───────── 시범 인두(S자) ─────────
@@ -417,7 +476,7 @@ export function createNakhwa(stage, opts = {}) {
       const steps = 240;
       for (let k = 1; k <= steps; k++) {
         const [x, y] = demoAt(k / steps);
-        burnSegment(px, py, x, y, demo.R * (NK.demoDur / steps));
+        burnSegment(px, py, x, y, demo.R * (NK.demoDur / steps), false);
         px = x; py = y;
       }
       flush();
@@ -510,16 +569,22 @@ export function createNakhwa(stage, opts = {}) {
   function physics(h) {
     if (fade >= 0) {
       fade += h;
-      const k = Math.exp(-h * 9);
-      for (let i = 0; i < heat.length; i++) heat[i] *= k;
+      const k = Math.exp(-h * 7);
+      const dw = h * NK.wearCap / 0.6;
+      for (let i = 0; i < heat.length; i++) {
+        heat[i] *= k;
+        wear[i] = wear[i] > dw ? wear[i] - dw : 0;
+      }
       dirty = [0, 0, fw, fh];
-      if (fade > 0.5) {
+      if (fade > 0.7) {
         heat.fill(0);
+        wear.fill(0);
         fade = -1;
         startDemo();
       }
       return;
     }
+    if (open.t >= 0) stepOpen(h);
     let act = 0;
     if (demo.t >= 0) {
       demo.t += h / NK.demoDur;
@@ -543,16 +608,107 @@ export function createNakhwa(stage, opts = {}) {
       const R = demo.t >= 0
         ? demo.R
         : NK.pass * (isTouch ? NK.speedTouch : NK.speedPC) / (Math.sqrt(2 * Math.PI) * sigma);
-      const added = burnSegment(px, py, iron.x, iron.y, R * h * iron.act);
+      const user = demo.t < 0 && iron.on;
+      const added = burnSegment(px, py, iron.x, iron.y, R * h * iron.act, user);
       emitSmoke(h, clamp(iron.act, 0, 1));
-      if (demo.t < 0 && iron.on) {
+      if (user) {
         burnedByUser += added;
         if (!firstFired && burnedByUser > 40) { firstFired = true; onFirstBurn && onFirstBurn(); }
       }
     } else {
       strand = null;
     }
+    if (!opened && open.t < 0 && burnedByUser > 0 && ++chk >= 15) {
+      chk = 0;
+      if (rubbed() >= NK.openAfter) startOpen();
+    }
     stepSmoke(h);
+  }
+
+  function rubbed() {
+    let s = 0;
+    for (let i = 0; i < wear.length; i++) if (mask[i] >= 0.5) s += wear[i] < 1 ? wear[i] : 1;
+    return s / paperN / rubRate;
+  }
+
+  function chamfer(d) {
+    const D = Math.SQRT2;
+    for (let y = 0; y < fh; y++) {
+      for (let x = 0; x < fw; x++) {
+        const i = y * fw + x;
+        let v = d[i];
+        if (x > 0 && d[i - 1] + 1 < v) v = d[i - 1] + 1;
+        if (y > 0) {
+          if (d[i - fw] + 1 < v) v = d[i - fw] + 1;
+          if (x > 0 && d[i - fw - 1] + D < v) v = d[i - fw - 1] + D;
+          if (x < fw - 1 && d[i - fw + 1] + D < v) v = d[i - fw + 1] + D;
+        }
+        d[i] = v;
+      }
+    }
+    for (let y = fh - 1; y >= 0; y--) {
+      for (let x = fw - 1; x >= 0; x--) {
+        const i = y * fw + x;
+        let v = d[i];
+        if (x < fw - 1 && d[i + 1] + 1 < v) v = d[i + 1] + 1;
+        if (y < fh - 1) {
+          if (d[i + fw] + 1 < v) v = d[i + fw] + 1;
+          if (x < fw - 1 && d[i + fw + 1] + D < v) v = d[i + fw + 1] + D;
+          if (x > 0 && d[i + fw - 1] + D < v) v = d[i + fw - 1] + D;
+        }
+        d[i] = v;
+      }
+    }
+  }
+
+  function startOpen() {
+    if (reduceMotion) {
+      finishOpen();
+      return;
+    }
+    const n = fw * fh;
+    const at = new Float32Array(n);
+    for (let i = 0; i < n; i++) at[i] = wear[i] >= NK.srcTh ? 0 : 1e9;
+    chamfer(at);
+    let far = 1;
+    for (let i = 0; i < n; i++) if (mask[i] > 0 && at[i] < 1e8 && at[i] > far) far = at[i];
+    const k = NK.spread / far;
+    let end = 0;
+    for (let i = 0; i < n; i++) {
+      at[i] = Math.max(0, at[i] * k + (grain[i] - 1));
+      if (mask[i] > 0 && at[i] > end) end = at[i];
+    }
+    open.at = at;
+    open.t = 0;
+    open.end = end + NK.rise + 0.15;
+  }
+
+  function stepOpen(h) {
+    open.t += h;
+    const t = open.t, at = open.at;
+    const dh = h * NK.cap / NK.rise, dw = h * NK.wearCap / NK.rise;
+    for (let i = 0; i < heat.length; i++) {
+      if (mask[i] <= 0 || at[i] > t) continue;
+      if (heat[i] < NK.cap) heat[i] = Math.min(NK.cap, heat[i] + dh);
+      if (at[i] + 0.12 <= t && wear[i] < NK.wearCap) wear[i] = Math.min(NK.wearCap, wear[i] + dw);
+    }
+    dirty = [0, 0, fw, fh];
+    if (t >= open.end) finishOpen();
+  }
+
+  function finishOpen() {
+    open.t = -1;
+    open.at = null;
+    for (let i = 0; i < heat.length; i++) {
+      if (mask[i] <= 0) continue;
+      heat[i] = NK.cap;
+      wear[i] = NK.wearCap;
+    }
+    dirty = [0, 0, fw, fh];
+    if (!opened) {
+      opened = true;
+      onOrigin && onOrigin();
+    }
   }
 
   function flush() {
@@ -628,6 +784,7 @@ export function createNakhwa(stage, opts = {}) {
     }
     if (!stepped) return;
     flush();
+    if (rvDirty) drawReveal();
     const live = iron.shown > 0.02 || smoke.some((s) => s.pts.length);
     if (live || fxDirty) {
       drawFx();
@@ -638,6 +795,9 @@ export function createNakhwa(stage, opts = {}) {
   function reset() {
     if (!ready) return;
     demo.t = -1;
+    open.t = -1;
+    open.at = null;
+    opened = false;
     fade = 0;
   }
 
@@ -646,7 +806,7 @@ export function createNakhwa(stage, opts = {}) {
     const r = stage.getBoundingClientRect();
     if (Math.round(r.width) === W && Math.abs(Math.round(r.height) - H) < 2) return;
     build();
-    startDemo();
+    if (!opened) startDemo();
   }
 
   // 검수용: 현재 숫자와 상태
@@ -657,7 +817,7 @@ export function createNakhwa(stage, opts = {}) {
       if (b > NK.bgTh[1]) bg2++; else if (b > NK.bgTh[0]) bg1++;
       if (l > NK.lnTh[3]) lnChar++; else if (l > NK.lnTh[1]) lnDark++;
     }
-    return { W, H, fw, fh, cs, radius: Math.round(radius), sigma: Math.round(sigma), bg1, bg2, lnDark, lnChar, demoR: +demo.R.toFixed(2) };
+    return { W, H, fw, fh, cs, radius: Math.round(radius), sigma: Math.round(sigma), bg1, bg2, lnDark, lnChar, demoR: +demo.R.toFixed(2), rubbed: +rubbed().toFixed(2), opening: +open.t.toFixed(2), opened };
   }
 
   return { update, reset, resize, loaded, stats, get ready() { return ready; } };
