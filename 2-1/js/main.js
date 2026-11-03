@@ -94,6 +94,7 @@ try {
     tileSrc: '../assets/art/hanji_linen_tile.jpg',
     onFirstBurn: () => hint.classList.add('is-off'),
     onOrigin: () => {
+      stageEl.classList.add('is-origin');
       hint.classList.add('is-off');
       ocEl.hidden = false;
     },
@@ -108,6 +109,7 @@ if (nk) {
   tasks.add((dt) => { if (visible) nk.update(dt); });
   $('.nk__reset').addEventListener('click', () => {
     hint.classList.remove('is-off');
+    stageEl.classList.remove('is-origin');
     ocEl.hidden = true;
     nk.reset();
   });

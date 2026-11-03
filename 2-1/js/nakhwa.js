@@ -22,7 +22,10 @@ export const NK = {
   wearSpread: 1.4,
   wearGain: 0.7,
   demoWear: 0.55,
-  showAt: 0.35,
+  srcTh: 0.1,
+  openAfter: 3,
+  spread: 1.2,
+  rise: 0.5,
 };
 
 // 곱하기 색 — 한지(약 #E6DBC7) 위에 곱해져 목표색이 되도록 맞춘 값
@@ -95,11 +98,12 @@ export function createNakhwa(stage, opts = {}) {
   let W = 0, H = 0, dpr = 1, cs = 2, fw = 0, fh = 0;
   let rect = null; // 한지 사각형(CSS px)
   let heat = null, grain = null, mask = null, img = null;
-  let wear = null, muralBuf = null, rvMask = null, rvCtx = null, rvImg = null, rvDirty = false, paperN = 1;
+  let wear = null, muralBuf = null, rvMask = null, rvCtx = null, rvImg = null, rvDirty = false;
   let radius = 40, sigma = 20, portrait = false;
   let dirty = null;
   let ready = false;
-  let opened = false, chk = 0;
+  const open = { t: -1, at: null, end: 0 };
+  let opened = false, drawn = 0;
 
   const iron = { x: 0, y: 0, tx: 0, ty: 0, on: false, act: 0, shown: 0, still: 0, down: false, mouse: false };
   const demo = { t: -1, pts: null, len: null, total: 0, R: 0 };
@@ -150,14 +154,11 @@ export function createNakhwa(stage, opts = {}) {
     img.data.fill(255);
     bctx.putImageData(img, 0, 0);
     dirty = null;
-    if (opened) fillReveal();
+    if (opened || open.t >= 0) finishOpen();
     buildDemoPath();
   }
 
   function buildReveal() {
-    paperN = 0;
-    for (let i = 0; i < mask.length; i++) if (mask[i] >= 0.5) paperN++;
-    paperN = Math.max(1, paperN);
     if (!rctx) return;
     reveal.width = paper.width;
     reveal.height = paper.height;
@@ -524,6 +525,7 @@ export function createNakhwa(stage, opts = {}) {
       }
       return;
     }
+    if (open.t >= 0) stepOpen(h);
     let act = 0;
     if (demo.t >= 0) {
       demo.t += h / NK.demoDur;
@@ -552,31 +554,94 @@ export function createNakhwa(stage, opts = {}) {
       emitSmoke(h, clamp(iron.act, 0, 1));
       if (user) {
         burnedByUser += added;
+        drawn += h * iron.act;
         if (!firstFired && burnedByUser > 40) { firstFired = true; onFirstBurn && onFirstBurn(); }
       }
     } else {
       strand = null;
     }
-    if (!opened && burnedByUser > 0 && ++chk >= 15) {
-      chk = 0;
-      if (revealed() >= NK.showAt) {
-        opened = true;
-        onOrigin && onOrigin();
-      }
-    }
+    if (!opened && open.t < 0 && drawn >= NK.openAfter) startOpen();
     stepSmoke(h);
   }
 
-  function revealed() {
-    const mid = (NK.rvTh[0] + NK.rvTh[1]) / 2;
-    let c = 0;
-    for (let i = 0; i < wear.length; i++) if (mask[i] >= 0.5 && wear[i] * grain[i] >= mid) c++;
-    return c / paperN;
+  function chamfer(d) {
+    const D = Math.SQRT2;
+    for (let y = 0; y < fh; y++) {
+      for (let x = 0; x < fw; x++) {
+        const i = y * fw + x;
+        let v = d[i];
+        if (x > 0 && d[i - 1] + 1 < v) v = d[i - 1] + 1;
+        if (y > 0) {
+          if (d[i - fw] + 1 < v) v = d[i - fw] + 1;
+          if (x > 0 && d[i - fw - 1] + D < v) v = d[i - fw - 1] + D;
+          if (x < fw - 1 && d[i - fw + 1] + D < v) v = d[i - fw + 1] + D;
+        }
+        d[i] = v;
+      }
+    }
+    for (let y = fh - 1; y >= 0; y--) {
+      for (let x = fw - 1; x >= 0; x--) {
+        const i = y * fw + x;
+        let v = d[i];
+        if (x < fw - 1 && d[i + 1] + 1 < v) v = d[i + 1] + 1;
+        if (y < fh - 1) {
+          if (d[i + fw] + 1 < v) v = d[i + fw] + 1;
+          if (x < fw - 1 && d[i + fw + 1] + D < v) v = d[i + fw + 1] + D;
+          if (x > 0 && d[i + fw - 1] + D < v) v = d[i + fw - 1] + D;
+        }
+        d[i] = v;
+      }
+    }
   }
 
-  function fillReveal() {
-    for (let i = 0; i < wear.length; i++) if (mask[i] > 0) wear[i] = NK.wearCap;
+  function startOpen() {
+    if (reduceMotion) {
+      finishOpen();
+      return;
+    }
+    const n = fw * fh;
+    const at = new Float32Array(n);
+    for (let i = 0; i < n; i++) at[i] = wear[i] >= NK.srcTh ? 0 : 1e9;
+    chamfer(at);
+    let far = 1;
+    for (let i = 0; i < n; i++) if (mask[i] > 0 && at[i] < 1e8 && at[i] > far) far = at[i];
+    const k = NK.spread / far;
+    let end = 0;
+    for (let i = 0; i < n; i++) {
+      at[i] = Math.max(0, at[i] * k + (grain[i] - 1));
+      if (mask[i] > 0 && at[i] > end) end = at[i];
+    }
+    open.at = at;
+    open.t = 0;
+    open.end = end + NK.rise + 0.15;
+  }
+
+  function stepOpen(h) {
+    open.t += h;
+    const t = open.t, at = open.at;
+    const dh = h * NK.cap / NK.rise, dw = h * NK.wearCap / NK.rise;
+    for (let i = 0; i < heat.length; i++) {
+      if (mask[i] <= 0 || at[i] > t) continue;
+      if (heat[i] < NK.cap) heat[i] = Math.min(NK.cap, heat[i] + dh);
+      if (at[i] + 0.1 <= t && wear[i] < NK.wearCap) wear[i] = Math.min(NK.wearCap, wear[i] + dw);
+    }
     dirty = [0, 0, fw, fh];
+    if (t >= open.end) finishOpen();
+  }
+
+  function finishOpen() {
+    open.t = -1;
+    open.at = null;
+    for (let i = 0; i < heat.length; i++) {
+      if (mask[i] <= 0) continue;
+      heat[i] = NK.cap;
+      wear[i] = NK.wearCap;
+    }
+    dirty = [0, 0, fw, fh];
+    if (!opened) {
+      opened = true;
+      onOrigin && onOrigin();
+    }
   }
 
   function flush() {
@@ -663,7 +728,10 @@ export function createNakhwa(stage, opts = {}) {
   function reset() {
     if (!ready) return;
     demo.t = -1;
+    open.t = -1;
+    open.at = null;
     opened = false;
+    drawn = 0;
     fade = 0;
   }
 
@@ -682,7 +750,7 @@ export function createNakhwa(stage, opts = {}) {
       const b = heat[i] * NK.base;
       if (b > NK.bgTh[1]) bg2++; else if (b > NK.bgTh[0]) bg1++;
     }
-    return { W, H, fw, fh, cs, radius: Math.round(radius), sigma: Math.round(sigma), bg1, bg2, demoR: +demo.R.toFixed(2), revealed: +revealed().toFixed(3), opened };
+    return { W, H, fw, fh, cs, radius: Math.round(radius), sigma: Math.round(sigma), bg1, bg2, demoR: +demo.R.toFixed(2), drawn: +drawn.toFixed(2), opening: +open.t.toFixed(2), opened };
   }
 
   return { update, reset, resize, loaded, stats, get ready() { return ready; } };

@@ -178,10 +178,13 @@ button { color: inherit; }
 }
 .nk__hint i { width: 8px; height: 8px; border-radius: 50%; background: var(--fire); flex: none; }
 .nk__hint.is-off { opacity: 0; }
+.nk__fx { transition: opacity 0.6s var(--ease); }
+.nk.is-origin .nk__fx { opacity: 0; }
 .nk__oc { position: absolute; left: 26px; bottom: 22px; z-index: 3; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; margin: 0; padding: 10px 16px; border-radius: 4px; background: rgba(24, 16, 10, 0.74); color: #F2E7CF; font-size: 15px; font-weight: 600; }
 .nk__oc[hidden] { display: none; }
 @media (prefers-reduced-motion: no-preference) { .nk__oc { animation: rise 0.9s var(--ease-out) both; } }
 .nk__oc b { font-size: 28px; line-height: 1.15; color: #F2E7CF; }
+@media (hover: hover) and (pointer: fine) { .nk.is-origin { cursor: auto; } }
 
 .hero__foot {
   display: flex; align-items: flex-end; justify-content: space-between;
