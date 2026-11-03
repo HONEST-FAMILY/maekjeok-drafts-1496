@@ -4,6 +4,9 @@
   font-weight: normal;
   font-style: normal;
   font-display: swap;
+  size-adjust: 112%;
+  ascent-override: 93%;
+  descent-override: 31%;
 }
 /* 맥적 메인 2안 — 「불로 그린 그림」
    색: 숯 #141210 · 미색 #F2E8D5 · 갈변 3단 #C68A4E → #7A4A28 → #3B2416 · 불씨 #D60909(점 하나) · 노을 #F59744(불씨 빛, 캔버스 안) */
@@ -175,7 +178,7 @@ button { color: inherit; }
 }
 .nk__hint i { width: 8px; height: 8px; border-radius: 50%; background: var(--fire); flex: none; }
 .nk__hint.is-off { opacity: 0; }
-.nk__origin { position: absolute; z-index: 1; display: block; max-width: none; object-fit: cover; pointer-events: none; opacity: var(--og, 0); transition: opacity 1.4s var(--ease); }
+.nk__origin { position: absolute; z-index: 1; display: block; max-width: calc(100% - 12px); max-height: calc(100% - 12px); object-fit: cover; pointer-events: none; opacity: var(--og, 0); transition: opacity 1.4s var(--ease); }
 .nk__fx { transition: opacity 0.6s var(--ease); }
 .nk.is-origin .nk__origin { opacity: 1; }
 .nk.is-origin .nk__fx { opacity: 0; }
@@ -665,4 +668,10 @@ html.mo .mo-card:not(.mo-in) { opacity: 0; translate: 0 var(--mo-cd); }
 @media (prefers-reduced-motion: reduce) {
   .mo-line__in, .mo-up, .mo-fade, .mo-heat, .mo-ph, .mo-clip, .mo-ph > img, .mo-ph > .crop, .mo-card, .mo-burn i { transition: none !important; }
 }
-.hero__title, .h2, main h3, .nk__oc b { font-family: "DeogonPrincess", "Pretendard Variable", Pretendard, "Malgun Gothic", serif; font-weight: 400; font-synthesis: none; letter-spacing: 0; }
+.hero__title, .h2, main h3, .nk__oc b, .num, .mf__name, .cut__num, .price, .hero__sub, .pair__cap b, .pair__cap span, .name__story, .fr__done { font-family: "DeogonPrincess", "Pretendard Variable", Pretendard, "Malgun Gothic", serif; font-weight: 400; font-synthesis: none; letter-spacing: 0; }
+.h2 { text-wrap: balance; }
+.h2 .soon { font-family: "Pretendard Variable", Pretendard, "Noto Sans KR", "Malgun Gothic", sans-serif; }
+@media (max-width: 768px) {
+  .hero__title .t2 { margin-top: 0.12em; }
+  .cuts, .sides, .biz__list { scroll-padding-inline: var(--pad); }
+}
