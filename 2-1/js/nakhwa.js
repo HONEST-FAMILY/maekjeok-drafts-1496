@@ -1,6 +1,5 @@
 // 낙화(烙畵) — 달군 인두로 한지를 그을려 그리는 장면
-// 열 누적 장(Float32) 위에 인두가 가우스 모양으로 열을 더하고, 누적값을 3단 갈변(+선 자리 숯)으로 칠한다.
-// 벽화의 어두운 선 자리는 더 빨리 그을려서, 문지를수록 357년 부엌 벽화가 떠오른다.
+// 열 누적 장(Float32) 위에 인두가 가우스 모양으로 열을 더하고, 누적값을 3단 갈변으로 칠한다.
 
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 const sstep = (a, b, x) => {
@@ -11,32 +10,28 @@ const sstep = (a, b, x) => {
 export const NK = {
   radiusFrac: 0.04, radiusMin: 24, radiusMax: 70, // 인두 반경 = 무대 폭 4%
   pass: 0.35,      // 보통 빠르기로 한 번 지날 때 쌓이는 열
-  base: 0.6,       // 바탕(선이 아닌 곳) 그을림 빠르기 — 아무리 문질러도 연갈~갈(2단)까지만
-  lineGain: 1.0,   // 선화 자리: 짙은 갈 → 숯
+  base: 0.6,       // 바탕 그을림 빠르기 — 아무리 문질러도 연갈~갈(2단)까지만
   cap: 1.3,
   bgTh: [0.15, 0.5], bgW: 0.09,   // 바탕 2단 문턱(부드럽게)
-  lnTh: [0.05, 0.38, 0.5, 0.95],  // 선: 짙은 갈로 진해지는 구간, 숯으로 가는 구간
   speedPC: 700, speedTouch: 450, // '보통 빠르기'(px/s)
-  demoDur: 2.5, demoHeat: 0.65, // 시범 인두: 2.5초, 지나간 자리 누적 0.65(선은 짙은 갈, 바탕은 연갈)
+  demoDur: 2.5, demoHeat: 0.65, // 시범 인두: 2.5초, 지나간 자리 누적 0.65
   follow: 30,      // 인두가 손을 따라가는 빠르기 1-exp(-dt*k)
   dwell: 0.9,      // 멈춘 채 이 시간이 지나면 인두를 든다(초)
   wearCap: 1.2,
-  rvTh: [0.3, 0.7],
-  srcTh: 0.1,
-  openAfter: 6,
-  spread: 1.5,
-  rise: 0.6,
+  rvTh: [0.05, 0.7],
+  wearSpread: 1.4,
+  wearGain: 0.7,
+  demoWear: 0.55,
+  showAt: 0.35,
 };
 
 // 곱하기 색 — 한지(약 #E6DBC7) 위에 곱해져 목표색이 되도록 맞춘 값
-// 바탕은 주황기 없는 '구운 종이' 2단, 선만 짙은 갈 → 숯
+// 바탕은 주황기 없는 '구운 종이' 2단
 const BG = [[255, 255, 255], [232, 208, 170], [184, 140, 100]]; // 그대로 · 연갈 · 갈
-const LN_DARK = [66, 42, 28];  // 짙은 갈 ≈ #3B2416
-const LN_CHAR = [24, 15, 10];  // 숯
 
 function buildLUT() {
   const N = 1024, VMAX = 1.6;
-  const bg = new Uint8ClampedArray(N * 3), ln = new Uint8ClampedArray(N * 4);
+  const bg = new Uint8ClampedArray(N * 3);
   for (let i = 0; i < N; i++) {
     const v = (i / (N - 1)) * VMAX;
     // 바탕: 2단(경계는 부드럽게), 그 이상은 안 간다
@@ -45,13 +40,8 @@ function buildLUT() {
     t = clamp(t * 0.85 + clamp(v / NK.bgTh[1], 0, 2) * 0.075, 0, 2);
     const k = Math.min(1, Math.floor(t)), f = t - k;
     for (let c = 0; c < 3; c++) bg[i * 3 + c] = BG[k][c] + (BG[k + 1][c] - BG[k][c]) * f;
-    // 선: 짙은 갈로 떠오르고 → 숯으로
-    const a = sstep(NK.lnTh[0], NK.lnTh[1], v);
-    const ch = sstep(NK.lnTh[2], NK.lnTh[3], v);
-    for (let c = 0; c < 3; c++) ln[i * 4 + c] = LN_DARK[c] + (LN_CHAR[c] - LN_DARK[c]) * ch;
-    ln[i * 4 + 3] = a * 255;
   }
-  return { bg, ln, N, scale: (N - 1) / VMAX };
+  return { bg, N, scale: (N - 1) / VMAX };
 }
 
 // 고정 씨앗 난수(그림이 매번 같게)
@@ -88,7 +78,7 @@ function coverSrc(iw, ih, w, h, fx, fy) {
 }
 
 export function createNakhwa(stage, opts = {}) {
-  const { reduceMotion = false, isTouch = false, muralSrc, tileSrc, linesSrc, onFirstBurn, onOrigin } = opts;
+  const { reduceMotion = false, isTouch = false, muralSrc, tileSrc, onFirstBurn, onOrigin } = opts;
   const paper = stage.querySelector('.nk__paper');
   const burn = stage.querySelector('.nk__burn');
   const reveal = stage.querySelector('.nk__reveal');
@@ -99,18 +89,16 @@ export function createNakhwa(stage, opts = {}) {
   const fctx = fx.getContext('2d');
   if (!pctx || !bctx || !fctx) throw new Error('canvas 2d 불가');
 
-  const { bg: BGL, ln: LNL, N: LN, scale: LS } = buildLUT();
-  const debugInk = /nkdebug/.test(location.search);
+  const { bg: BGL, N: LN, scale: LS } = buildLUT();
 
-  let mural = null, tile = null, lines = null;
+  let mural = null, tile = null;
   let W = 0, H = 0, dpr = 1, cs = 2, fw = 0, fh = 0;
   let rect = null; // 한지 사각형(CSS px)
-  let heat = null, ink = null, grain = null, mask = null, img = null;
-  let wear = null, muralBuf = null, rvMask = null, rvCtx = null, rvImg = null, rvDirty = false, paperN = 1, rubRate = 1;
+  let heat = null, grain = null, mask = null, img = null;
+  let wear = null, muralBuf = null, rvMask = null, rvCtx = null, rvImg = null, rvDirty = false, paperN = 1;
   let radius = 40, sigma = 20, portrait = false;
   let dirty = null;
   let ready = false;
-  const open = { t: -1, at: null, end: 0 };
   let opened = false, chk = 0;
 
   const iron = { x: 0, y: 0, tx: 0, ty: 0, on: false, act: 0, shown: 0, still: 0, down: false, mouse: false };
@@ -123,8 +111,8 @@ export function createNakhwa(stage, opts = {}) {
   let acc = 0;
 
   // ───────── 준비 ─────────
-  const loaded = Promise.all([loadImage(muralSrc), loadImage(tileSrc), loadImage(linesSrc)]).then(([m, t, l]) => {
-    mural = m; tile = t; lines = l;
+  const loaded = Promise.all([loadImage(muralSrc), loadImage(tileSrc)]).then(([m, t]) => {
+    mural = m; tile = t;
     build();
     ready = true;
     startDemo();
@@ -154,21 +142,15 @@ export function createNakhwa(stage, opts = {}) {
 
     heat = new Float32Array(fw * fh);
     wear = new Float32Array(fw * fh);
-    buildMaskAndInk();
+    buildMask();
     buildGrain();
     drawPaper();
     buildReveal();
     img = bctx.createImageData(fw, fh);
     img.data.fill(255);
-    if (debugInk) {
-      for (let i = 0; i < fw * fh; i++) {
-        const g = 255 - ink[i] * 220;
-        img.data[i * 4] = g; img.data[i * 4 + 1] = g; img.data[i * 4 + 2] = g;
-      }
-    }
     bctx.putImageData(img, 0, 0);
     dirty = null;
-    if (opened || open.t >= 0) finishOpen();
+    if (opened) fillReveal();
     buildDemoPath();
   }
 
@@ -176,7 +158,6 @@ export function createNakhwa(stage, opts = {}) {
     paperN = 0;
     for (let i = 0; i < mask.length; i++) if (mask[i] >= 0.5) paperN++;
     paperN = Math.max(1, paperN);
-    rubRate = NK.pass * Math.sqrt(2 * Math.PI) * sigma * (isTouch ? NK.speedTouch : NK.speedPC) / (rect.w * rect.h);
     if (!rctx) return;
     reveal.width = paper.width;
     reveal.height = paper.height;
@@ -274,7 +255,7 @@ export function createNakhwa(stage, opts = {}) {
     const [fxp, fyp] = muralFocus();
     const s = coverSrc(mural.width, mural.height, rect.w, rect.h, fxp, fyp);
     ctx.globalCompositeOperation = 'multiply';
-    ctx.globalAlpha = 0.06;
+    ctx.globalAlpha = 0.14;
     ctx.drawImage(mural, s[0], s[1], s[2], s[3], rect.x, rect.y, rect.w, rect.h);
     // 가장자리로 갈수록 조금 바랜 종이
     ctx.globalAlpha = 1;
@@ -287,7 +268,7 @@ export function createNakhwa(stage, opts = {}) {
     ctx.restore();
   }
 
-  function buildMaskAndInk() {
+  function buildMask() {
     const c = document.createElement('canvas');
     c.width = fw; c.height = fh;
     const ctx = c.getContext('2d', { willReadFrequently: true });
@@ -299,42 +280,6 @@ export function createNakhwa(stage, opts = {}) {
     const md = ctx.getImageData(0, 0, fw, fh).data;
     mask = new Float32Array(fw * fh);
     for (let i = 0; i < fw * fh; i++) mask[i] = md[i * 4 + 3] / 255;
-
-    // 벽화 선화(윤곽선) 지도 → 0~1
-    ctx.clearRect(0, 0, fw, fh);
-    const [fxp, fyp] = muralFocus();
-    const rx = rect.x * s, ry = rect.y * s, rw = rect.w * s, rh = rect.h * s;
-    const src = coverSrc(lines.width, lines.height, rw, rh, fxp, fyp);
-    ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(lines, src[0], src[1], src[2], src[3], rx, ry, rw, rh);
-    const d = ctx.getImageData(0, 0, fw, fh).data;
-    const n = fw * fh;
-    ink = new Float32Array(n);
-    // 줄여 그리면 선이 옅어지므로 대비를 조금 올림
-    for (let i = 0; i < n; i++) ink[i] = sstep(0.1, 0.65, d[i * 4] / 255) * mask[i];
-    // '357' — 같은 선화 결로(윤곽만) 숨겨 둔다
-    ctx.clearRect(0, 0, fw, fh);
-    ctx.strokeStyle = '#fff';
-    ctx.lineJoin = 'round';
-    ctx.textBaseline = 'alphabetic';
-    let size, x, y;
-    if (portrait) {
-      size = rw * 0.44;
-      ctx.textAlign = 'center';
-      x = rx + rw * 0.5; y = ry + rh * 0.955;
-    } else {
-      size = rh * 0.40;
-      ctx.textAlign = 'right';
-      x = rx + rw * 0.965; y = ry + rh * 0.95;
-    }
-    ctx.font = `900 ${size}px "Pretendard Variable", Pretendard, sans-serif`;
-    ctx.lineWidth = Math.max(1.6, size * 0.03);
-    ctx.strokeText('357', x, y);
-    const td = ctx.getImageData(0, 0, fw, fh).data;
-    for (let i = 0; i < n; i++) {
-      const a = td[i * 4 + 3] / 255;
-      if (a > 0) ink[i] = Math.max(ink[i], a * mask[i]);
-    }
   }
 
   // 그을림이 고르지 않게 — 낮은 주파수 얼룩(0.86~1.14)
@@ -358,14 +303,14 @@ export function createNakhwa(stage, opts = {}) {
   }
 
   // ───────── 열 더하기 ─────────
-  function stamp(cx, cy, amt, user) {
-    const s = sigma / cs;
+  function stamp(cx, cy, amt, wk) {
+    const s = sigma / cs, sw = s * NK.wearSpread;
     const fxp = cx / cs, fyp = cy / cs;
-    const r = Math.ceil(s * 2.6);
+    const rh = Math.ceil(s * 2.6), r = wk ? Math.ceil(sw * 2.6) : rh;
     const xa = Math.max(0, Math.floor(fxp - r)), xb = Math.min(fw - 1, Math.ceil(fxp + r));
     const ya = Math.max(0, Math.floor(fyp - r)), yb = Math.min(fh - 1, Math.ceil(fyp + r));
     if (xa > xb || ya > yb) return 0;
-    const inv = 1 / (2 * s * s), r2 = r * r;
+    const inv = 1 / (2 * s * s), invW = 1 / (2 * sw * sw), r2 = r * r, rh2 = rh * rh, gw = amt * wk * NK.wearGain;
     let added = 0;
     for (let y = ya; y <= yb; y++) {
       const dy = y + 0.5 - fyp;
@@ -376,11 +321,11 @@ export function createNakhwa(stage, opts = {}) {
         if (d2 > r2) continue;
         const m = mask[i];
         if (m <= 0) continue;
-        const g = amt * Math.exp(-d2 * inv) * m;
-        if (user) wear[i] = Math.min(NK.wearCap, wear[i] + g);
+        if (wk) wear[i] = Math.min(NK.wearCap, wear[i] + gw * Math.exp(-d2 * invW) * m);
+        if (d2 > rh2) continue;
         const h0 = heat[i];
         if (h0 >= NK.cap) continue;
-        const h1 = Math.min(NK.cap, h0 + g);
+        const h1 = Math.min(NK.cap, h0 + amt * Math.exp(-d2 * inv) * m);
         heat[i] = h1;
         added += h1 - h0;
       }
@@ -396,34 +341,29 @@ export function createNakhwa(stage, opts = {}) {
   }
 
   // 선분을 따라 여러 번 찍어 빠른 손놀림에도 끊기지 않게 (dt 기준 → 느릴수록 더 탄다)
-  function burnSegment(x0, y0, x1, y1, amount, user) {
+  function burnSegment(x0, y0, x1, y1, amount, wk) {
     const dist = Math.hypot(x1 - x0, y1 - y0);
     const n = Math.max(1, Math.ceil(dist / (sigma * 0.35)));
     let added = 0;
     for (let k = 0; k < n; k++) {
       const t = (k + 0.5) / n;
-      added += stamp(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t, amount / n, user);
+      added += stamp(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t, amount / n, wk);
     }
     return added;
   }
 
   function renderRect(x0, y0, x1, y1) {
-    if (debugInk) return;
     const data = img.data;
     const rd = rvImg ? rvImg.data : null;
     for (let y = y0; y < y1; y++) {
       let i = y * fw + x0;
       for (let x = x0; x < x1; x++, i++) {
-        const h = heat[i] * grain[i];
-        let bi = (h * NK.base * LS) | 0;
+        let bi = (heat[i] * grain[i] * NK.base * LS) | 0;
         if (bi > LN - 1) bi = LN - 1;
-        let li = (h * NK.lineGain * ink[i] * LS) | 0;
-        if (li > LN - 1) li = LN - 1;
-        const o = i << 2, b3 = bi * 3, l4 = li << 2;
-        const a = LNL[l4 + 3] / 255;
-        data[o] = BGL[b3] + (LNL[l4] - BGL[b3]) * a;
-        data[o + 1] = BGL[b3 + 1] + (LNL[l4 + 1] - BGL[b3 + 1]) * a;
-        data[o + 2] = BGL[b3 + 2] + (LNL[l4 + 2] - BGL[b3 + 2]) * a;
+        const o = i << 2, b3 = bi * 3;
+        data[o] = BGL[b3];
+        data[o + 1] = BGL[b3 + 1];
+        data[o + 2] = BGL[b3 + 2];
         if (rd) rd[o + 3] = sstep(NK.rvTh[0], NK.rvTh[1], wear[i] * grain[i]) * 255;
       }
     }
@@ -476,7 +416,7 @@ export function createNakhwa(stage, opts = {}) {
       const steps = 240;
       for (let k = 1; k <= steps; k++) {
         const [x, y] = demoAt(k / steps);
-        burnSegment(px, py, x, y, demo.R * (NK.demoDur / steps), false);
+        burnSegment(px, py, x, y, demo.R * (NK.demoDur / steps), NK.demoWear);
         px = x; py = y;
       }
       flush();
@@ -584,7 +524,6 @@ export function createNakhwa(stage, opts = {}) {
       }
       return;
     }
-    if (open.t >= 0) stepOpen(h);
     let act = 0;
     if (demo.t >= 0) {
       demo.t += h / NK.demoDur;
@@ -609,7 +548,7 @@ export function createNakhwa(stage, opts = {}) {
         ? demo.R
         : NK.pass * (isTouch ? NK.speedTouch : NK.speedPC) / (Math.sqrt(2 * Math.PI) * sigma);
       const user = demo.t < 0 && iron.on;
-      const added = burnSegment(px, py, iron.x, iron.y, R * h * iron.act, user);
+      const added = burnSegment(px, py, iron.x, iron.y, R * h * iron.act, user ? 1 : demo.t >= 0 ? NK.demoWear : 0);
       emitSmoke(h, clamp(iron.act, 0, 1));
       if (user) {
         burnedByUser += added;
@@ -618,97 +557,26 @@ export function createNakhwa(stage, opts = {}) {
     } else {
       strand = null;
     }
-    if (!opened && open.t < 0 && burnedByUser > 0 && ++chk >= 15) {
+    if (!opened && burnedByUser > 0 && ++chk >= 15) {
       chk = 0;
-      if (rubbed() >= NK.openAfter) startOpen();
+      if (revealed() >= NK.showAt) {
+        opened = true;
+        onOrigin && onOrigin();
+      }
     }
     stepSmoke(h);
   }
 
-  function rubbed() {
-    let s = 0;
-    for (let i = 0; i < wear.length; i++) if (mask[i] >= 0.5) s += wear[i] < 1 ? wear[i] : 1;
-    return s / paperN / rubRate;
+  function revealed() {
+    const mid = (NK.rvTh[0] + NK.rvTh[1]) / 2;
+    let c = 0;
+    for (let i = 0; i < wear.length; i++) if (mask[i] >= 0.5 && wear[i] * grain[i] >= mid) c++;
+    return c / paperN;
   }
 
-  function chamfer(d) {
-    const D = Math.SQRT2;
-    for (let y = 0; y < fh; y++) {
-      for (let x = 0; x < fw; x++) {
-        const i = y * fw + x;
-        let v = d[i];
-        if (x > 0 && d[i - 1] + 1 < v) v = d[i - 1] + 1;
-        if (y > 0) {
-          if (d[i - fw] + 1 < v) v = d[i - fw] + 1;
-          if (x > 0 && d[i - fw - 1] + D < v) v = d[i - fw - 1] + D;
-          if (x < fw - 1 && d[i - fw + 1] + D < v) v = d[i - fw + 1] + D;
-        }
-        d[i] = v;
-      }
-    }
-    for (let y = fh - 1; y >= 0; y--) {
-      for (let x = fw - 1; x >= 0; x--) {
-        const i = y * fw + x;
-        let v = d[i];
-        if (x < fw - 1 && d[i + 1] + 1 < v) v = d[i + 1] + 1;
-        if (y < fh - 1) {
-          if (d[i + fw] + 1 < v) v = d[i + fw] + 1;
-          if (x < fw - 1 && d[i + fw + 1] + D < v) v = d[i + fw + 1] + D;
-          if (x > 0 && d[i + fw - 1] + D < v) v = d[i + fw - 1] + D;
-        }
-        d[i] = v;
-      }
-    }
-  }
-
-  function startOpen() {
-    if (reduceMotion) {
-      finishOpen();
-      return;
-    }
-    const n = fw * fh;
-    const at = new Float32Array(n);
-    for (let i = 0; i < n; i++) at[i] = wear[i] >= NK.srcTh ? 0 : 1e9;
-    chamfer(at);
-    let far = 1;
-    for (let i = 0; i < n; i++) if (mask[i] > 0 && at[i] < 1e8 && at[i] > far) far = at[i];
-    const k = NK.spread / far;
-    let end = 0;
-    for (let i = 0; i < n; i++) {
-      at[i] = Math.max(0, at[i] * k + (grain[i] - 1));
-      if (mask[i] > 0 && at[i] > end) end = at[i];
-    }
-    open.at = at;
-    open.t = 0;
-    open.end = end + NK.rise + 0.15;
-  }
-
-  function stepOpen(h) {
-    open.t += h;
-    const t = open.t, at = open.at;
-    const dh = h * NK.cap / NK.rise, dw = h * NK.wearCap / NK.rise;
-    for (let i = 0; i < heat.length; i++) {
-      if (mask[i] <= 0 || at[i] > t) continue;
-      if (heat[i] < NK.cap) heat[i] = Math.min(NK.cap, heat[i] + dh);
-      if (at[i] + 0.12 <= t && wear[i] < NK.wearCap) wear[i] = Math.min(NK.wearCap, wear[i] + dw);
-    }
+  function fillReveal() {
+    for (let i = 0; i < wear.length; i++) if (mask[i] > 0) wear[i] = NK.wearCap;
     dirty = [0, 0, fw, fh];
-    if (t >= open.end) finishOpen();
-  }
-
-  function finishOpen() {
-    open.t = -1;
-    open.at = null;
-    for (let i = 0; i < heat.length; i++) {
-      if (mask[i] <= 0) continue;
-      heat[i] = NK.cap;
-      wear[i] = NK.wearCap;
-    }
-    dirty = [0, 0, fw, fh];
-    if (!opened) {
-      opened = true;
-      onOrigin && onOrigin();
-    }
   }
 
   function flush() {
@@ -795,8 +663,6 @@ export function createNakhwa(stage, opts = {}) {
   function reset() {
     if (!ready) return;
     demo.t = -1;
-    open.t = -1;
-    open.at = null;
     opened = false;
     fade = 0;
   }
@@ -811,13 +677,12 @@ export function createNakhwa(stage, opts = {}) {
 
   // 검수용: 현재 숫자와 상태
   function stats() {
-    let bg1 = 0, bg2 = 0, lnDark = 0, lnChar = 0;
+    let bg1 = 0, bg2 = 0;
     for (let i = 0; i < heat.length; i++) {
-      const b = heat[i] * NK.base, l = heat[i] * NK.lineGain * ink[i];
+      const b = heat[i] * NK.base;
       if (b > NK.bgTh[1]) bg2++; else if (b > NK.bgTh[0]) bg1++;
-      if (l > NK.lnTh[3]) lnChar++; else if (l > NK.lnTh[1]) lnDark++;
     }
-    return { W, H, fw, fh, cs, radius: Math.round(radius), sigma: Math.round(sigma), bg1, bg2, lnDark, lnChar, demoR: +demo.R.toFixed(2), rubbed: +rubbed().toFixed(2), opening: +open.t.toFixed(2), opened };
+    return { W, H, fw, fh, cs, radius: Math.round(radius), sigma: Math.round(sigma), bg1, bg2, demoR: +demo.R.toFixed(2), revealed: +revealed().toFixed(3), opened };
   }
 
   return { update, reset, resize, loaded, stats, get ready() { return ready; } };
