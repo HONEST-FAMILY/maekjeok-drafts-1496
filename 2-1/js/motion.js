@@ -153,12 +153,13 @@ function init() {
     '.name__text p', '.name__story', '.name__mural figcaption', '.mf__lead',
     '.sets__note', '.master__text > p:not(.hanja-big)', '.master__photo figcaption', '.biz__head p',
     '.jumak__text > p:not(.hanja-big)', '.fr__text > p', '.fr__form h3',
+    '.mf__patent', '.pkg__tag', '.pkg__sub', '.pkg__lead', '.pkg__note',
   ];
   $$(small.join(',')).forEach((el) => watch(el, 'mo-up', 120));
   if (!$('.mf.mf--film')) $$('.mf__step').forEach((el) => watch(el, 'mo-up', 80));
 
   // 사진
-  const photoSel = ['.cut img', '.sets__img', '.side img', '.master__photo img', '.bz img', '.jumak__photo img', '.jumak__sub', '.visit__photo img'];
+  const photoSel = ['.cut img', '.sets__img', '.side img', '.master__photo img', '.cred img', '.bz img', '.pkg__photo img', '.jumak__photo img', '.jumak__sub', '.visit__photo img'];
   $$(photoSel.join(',')).forEach((img) => wrapFrame(img));
   $$('.pair__img > .crop, .pair__img > img').forEach((el) => wrapFrame(el));
   $$('.mo-frame').forEach((f, i) => watch(f, 'mo-ph', f.closest('.pair__img') ? (f.previousElementSibling ? 140 : 0) : 0));
@@ -173,11 +174,11 @@ function init() {
   // 카드·메뉴 칸·목록: 차례로
   const groups = [
     ['.cuts', '.cut', 70], ['.sets__list', '.set', 70], ['.sides', '.side', 70], ['.biz__list', '.bz', 70],
-    ['.pairs', '.pair', 90], ['.news__list', 'li', 80], ['.info', ':scope > div', 60], ['.fr__links', 'li', 70],
+    ['.pairs', '.pair', 90], ['.creds', '.cred', 90], ['.pkg__list', ':scope > li', 80], ['.news__list', ':scope > li', 80], ['.info', ':scope > div', 60], ['.fr__links', 'li', 70],
     ['.fr__fields', '.fld', 80], ['.ft__text', 'p', 70],
   ];
   groups.forEach(([box, item, step]) => {
-    $$(box).forEach((b) => $$(item, b).forEach((el, i) => watch(el, ['.cut', '.set', '.side', '.bz', '.pair', 'li'].includes(item) && box !== '.fr__links' ? 'mo-card' : 'mo-up', i * step)));
+    $$(box).forEach((b) => $$(item, b).forEach((el, i) => watch(el, ['.cut', '.set', '.side', '.bz', '.pair', '.cred', 'li', ':scope > li'].includes(item) && box !== '.fr__links' ? 'mo-card' : 'mo-up', i * step)));
   });
   watch($('.agree'), 'mo-up', 240);
   watch($('#inquiry .btn'), 'mo-fade', 300); // 자석(translate)과 겹치지 않게 투명도만
