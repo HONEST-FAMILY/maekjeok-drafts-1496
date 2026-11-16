@@ -381,7 +381,7 @@
           <p class="pkg__launch"><b>2026년 11월 28일</b> 맥적 전주본점 공식 런칭 예정</p>
           <div class="pkg__btns">
             <a class="btn btn--line btn--lg" href="#" data-soon="제품 상세페이지는 지금 만들고 있습니다">제품 상세페이지</a>
-            <a class="btn btn--line btn--lg" href="#" data-soon="조리방법 영상은 준비 중입니다">조리방법 영상</a>
+            <a class="btn btn--line btn--lg" href="../assets/video/maekjeok_film.mp4" data-video><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M7 4.5v15l12-7.5z" fill="currentColor"/></svg>조리방법 영상</a>
             <a class="btn btn--fill btn--lg" href="#" data-soon="11월 28일 런칭 후 구매하실 수 있습니다">구매 · 예약구매</a>
           </div>
         </div>
@@ -525,6 +525,18 @@
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 3.8h2.6l1.5 4-1.9 1.3a10.8 10.8 0 0 0 6.1 6.1l1.3-1.9 4 1.5v2.6a1.8 1.8 0 0 1-1.9 1.8A15.6 15.6 0 0 1 4.8 5.7a1.8 1.8 0 0 1 1.8-1.9z"/></svg><span>전화</span>
   </a>
 </nav>
+
+<div class="vpop" id="vpop" role="dialog" aria-modal="true" aria-labelledby="vpop-t" hidden>
+  <div class="vpop__box">
+    <div class="vpop__top">
+      <p class="vpop__t" id="vpop-t">조리방법 영상</p>
+      <button class="vpop__close" type="button" aria-label="영상 닫기">
+        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <video poster="../assets/video/maekjeok_film_poster.jpg" width="1080" height="608" controls playsinline preload="none"></video>
+  </div>
+</div>
 
 <p class="toast" role="status" aria-live="polite" hidden></p>
 <script>(function(){var linked=function(re){return re.test(location.search+'&'+location.hash)},load=function(id,src,attrs){if(document.getElementById(id))return;var s=document.createElement('script');s.id=id;s.src=src;for(var k in attrs)s.setAttribute(k,attrs[k]);document.body.appendChild(s)},check=function(){if(linked(/[?#&](feedback=on|hffb=(on|\d)|hffbt=)/))load('hf-feedback-js','https://honest-family.github.io/feedback-pin-kit/hf-feedback.js',{'data-key':'fb_xn4v14utklfsdiqntphot888','data-cursor-hint':'','data-top':'96'});if(window.top===window&&linked(/[?#&]develop=/))load('qa-review-js','https://honest-family.github.io/qa-review-kit/qa-review.js',{})};check();addEventListener('hashchange',check)})()</script>

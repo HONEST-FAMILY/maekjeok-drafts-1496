@@ -402,6 +402,7 @@ button { color: inherit; }
 .pkg__launch { font-size: clamp(18px, 1.5vw, 21px); font-weight: 700; color: var(--paper); }
 .pkg__launch b { color: var(--tan); font-weight: 800; margin-right: 6px; }
 .pkg__btns { display: flex; flex-wrap: wrap; gap: 10px; }
+.pkg__btns .btn svg { flex: none; margin-right: 8px; }
 
 /* ───────── 8. 주막 ───────── */
 .jumak__grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 40px 64px; align-items: end; }
@@ -488,6 +489,19 @@ button { color: inherit; }
   padding: 12px 20px; font-size: 15px; font-weight: 700;
 }
 .toast[hidden] { display: none; }
+
+.vpop {
+  position: fixed; inset: 0; z-index: 80;
+  display: grid; place-items: center;
+  padding: 20px var(--pad) calc(20px + env(safe-area-inset-bottom));
+  background: rgba(10, 8, 6, 0.92); overscroll-behavior: contain;
+}
+.vpop[hidden] { display: none; }
+.vpop__box { width: min(1080px, 100%, (100vh - 120px) * 1080 / 608); }
+.vpop__top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 8px; }
+.vpop__t { font-size: 17px; font-weight: 700; color: var(--paper); }
+.vpop__close { width: 44px; height: 44px; display: grid; place-items: center; background: none; border: 0; cursor: pointer; margin-right: -10px; }
+.vpop video { display: block; width: 100%; height: auto; aspect-ratio: 1080 / 608; background: #000; }
 
 /* ───────── 중간 폭 ───────── */
 @media (max-width: 1180px) {

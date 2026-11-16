@@ -41,7 +41,7 @@ hd.addEventListener('mouseleave', closeMega);
 gnb.addEventListener('focusin', openMega);
 gnb.addEventListener('focusout', (e) => { if (!gnb.contains(e.relatedTarget)) closeMega(); });
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') { closeMega(); closeSheet(); }
+  if (e.key === 'Escape') { closeMega(); closeSheet(); closeVideo(); }
 });
 $$('a', gnb).forEach((a) => a.addEventListener('click', () => { closeMega(); a.blur(); }));
 
@@ -80,6 +80,36 @@ document.addEventListener('click', (e) => {
   e.preventDefault();
   say(a.dataset.soon || '준비 중인 페이지입니다');
 });
+
+const vpop = $('#vpop');
+const vpopVideo = $('video', vpop);
+const vpopClose = $('.vpop__close', vpop);
+let vpopFrom = null;
+function openVideo(a) {
+  vpopFrom = a;
+  if (!vpopVideo.src) vpopVideo.src = a.href;
+  vpop.hidden = false;
+  document.documentElement.style.overflow = 'hidden';
+  vpopVideo.currentTime = 0;
+  const pr = vpopVideo.play();
+  if (pr) pr.catch(() => {});
+  vpopClose.focus();
+}
+function closeVideo() {
+  if (vpop.hidden) return;
+  vpopVideo.pause();
+  vpop.hidden = true;
+  document.documentElement.style.overflow = '';
+  if (vpopFrom) vpopFrom.focus();
+}
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('a[data-video]');
+  if (!a) return;
+  e.preventDefault();
+  openVideo(a);
+});
+vpopClose.addEventListener('click', closeVideo);
+vpop.addEventListener('click', (e) => { if (e.target === vpop) closeVideo(); });
 
 // ───────── 2. 낙화 무대 ─────────
 const stageEl = $('#nakhwa');
