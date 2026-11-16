@@ -153,7 +153,7 @@ function init() {
     '.name__text p', '.name__story', '.name__mural figcaption', '.mf__lead',
     '.sets__note', '.master__text > p:not(.hanja-big)', '.master__photo figcaption', '.biz__head p',
     '.jumak__text > p:not(.hanja-big)', '.fr__text > p', '.fr__form h3',
-    '.mf__patent', '.pkg__tag', '.pkg__sub', '.pkg__lead', '.pkg__note',
+    '.mf__patent', '.mf__kicker', '.mf__video', '.pkg__tag', '.pkg__sub', '.pkg__sub2', '.pkg__lead', '.pkg__launch', '.fr__lead', '.jumak__note',
   ];
   $$(small.join(',')).forEach((el) => watch(el, 'mo-up', 120));
   if (!$('.mf.mf--film')) $$('.mf__step').forEach((el) => watch(el, 'mo-up', 80));
@@ -174,7 +174,7 @@ function init() {
   // 카드·메뉴 칸·목록: 차례로
   const groups = [
     ['.cuts', '.cut', 70], ['.sets__list', '.set', 70], ['.sides', '.side', 70], ['.biz__list', '.bz', 70],
-    ['.pairs', '.pair', 90], ['.creds', '.cred', 90], ['.pkg__list', ':scope > li', 80], ['.news__list', ':scope > li', 80], ['.info', ':scope > div', 60], ['.fr__links', 'li', 70],
+    ['.pairs', '.pair', 90], ['.creds', '.cred', 90], ['.pkg__list', ':scope > li', 80], ['.tl__list', ':scope > li', 80], ['.info', ':scope > div', 60], ['.fr__links', 'li', 70],
     ['.fr__fields', '.fld', 80], ['.ft__text', 'p', 70],
   ];
   groups.forEach(([box, item, step]) => {
@@ -183,6 +183,7 @@ function init() {
   watch($('.agree'), 'mo-up', 240);
   watch($('#inquiry .btn'), 'mo-fade', 300); // 자석(translate)과 겹치지 않게 투명도만
   watch($('.visit__btns'), 'mo-up', 120);
+  watch($('.pkg__btns'), 'mo-up', 160);
   watch($('.ft__logo'), 'mo-up');
 
   // 숫자(실제 숫자만): 357 · 3mm · 15일 · 가격 · g
@@ -281,7 +282,7 @@ function hands(parallax) {
 
   // 3) 옆으로 넘기는 줄: PC에서 끌어 넘기기(관성)
   if (fine) {
-    $$('.cuts, .sides, .biz__list, .name__pan').forEach((row) => {
+    $$('.cuts, .sides, .biz__list, .name__pan, .tl').forEach((row) => {
       let down = false, sx = 0, sl = 0, v = 0, lx = 0, lt = 0, moved = 0;
       row.addEventListener('dragstart', (e) => e.preventDefault());
       row.addEventListener('pointerdown', (e) => {
@@ -315,7 +316,7 @@ function hands(parallax) {
 function headerCurrent() {
   const tops = $$('#gnb .gnb__top');
   const byHref = (h) => tops.find((a) => a.getAttribute('href') === h);
-  const map = { brand: '#brand', maillard: '#brand', menu: '#brand', master: '#brand', business: '#business', jumak: '#brand', visit: '#about', franchise: '#franchise', news: '#news' };
+  const map = { brand: '#brand', maillard: '#brand', menu: '#brand', master: '#brand', business: '#business', jumak: '#brand', visit: '#about', franchise: '#franchise', news: '#about' };
   const cur = new IntersectionObserver((ens) => {
     ens.forEach((en) => {
       if (!en.isIntersecting) return;

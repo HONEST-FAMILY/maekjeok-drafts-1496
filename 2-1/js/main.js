@@ -78,7 +78,7 @@ document.addEventListener('click', (e) => {
   const a = e.target.closest('a[data-soon]');
   if (!a) return;
   e.preventDefault();
-  say('준비 중인 페이지입니다');
+  say(a.dataset.soon || '준비 중인 페이지입니다');
 });
 
 // ───────── 2. 낙화 무대 ─────────
@@ -158,6 +158,32 @@ tasks.add(() => {
   }
 });
 
+const mfVideo = $('.mf__video video');
+if (mfVideo && !reduceMotion) {
+  let userPaused = false;
+  let autoPausing = false;
+  mfVideo.addEventListener('pause', () => {
+    if (!autoPausing && !mfVideo.ended) userPaused = true;
+    autoPausing = false;
+  });
+  mfVideo.addEventListener('play', () => { userPaused = false; });
+  new IntersectionObserver(([en]) => {
+    if (en.isIntersecting) {
+      if (!userPaused && mfVideo.paused) { const pr = mfVideo.play(); if (pr) pr.catch(() => {}); }
+    } else if (!mfVideo.paused) {
+      autoPausing = true;
+      mfVideo.pause();
+    }
+  }, { threshold: 0.35 }).observe(mfVideo);
+}
+
+const tl = $('.tl');
+const tlEnd = () => tl && tl.classList.toggle('is-end', tl.scrollLeft + tl.clientWidth >= tl.scrollWidth - 4);
+if (tl) {
+  tl.addEventListener('scroll', tlEnd, { passive: true });
+  tlEnd();
+}
+
 // ───────── 폰 아래 앱바: 지금 보는 구역 ─────────
 const appLinks = $$('.appbar a[data-sec]');
 const secMap = { top: 'top', brand: 'top', maillard: 'menu', menu: 'menu', master: 'menu', business: 'visit', jumak: 'visit', visit: 'visit', franchise: 'franchise', news: 'franchise' };
@@ -208,5 +234,6 @@ window.addEventListener('resize', () => {
     lastW = w;
     if (!phoneMQ.matches) closeSheet();
     nk && nk.resize();
+    tlEnd();
   }, 200);
 });
