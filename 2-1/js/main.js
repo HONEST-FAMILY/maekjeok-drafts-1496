@@ -231,11 +231,11 @@ const io = new IntersectionObserver((ens) => {
 }, { rootMargin: '-45% 0px -50% 0px' });
 watched.forEach((el) => io.observe(el));
 
-// ───────── 창업 문의: 화면 안에서만 접수 표시 ─────────
+// ───────── 창업 문의: 운영 주소에서는 서버로 접수(기록 + 알림 메일) ─────────
 const form = $('#inquiry');
 form.addEventListener('submit', (e) => {
   e.preventDefault();
-  const fields = $$('input', form);
+  const fields = $$('input', form).filter((f) => f.name !== 'website');
   let ok = true;
   fields.forEach((f) => {
     const bad = f.type === 'checkbox' ? !f.checked : !f.value.trim();
@@ -248,9 +248,27 @@ form.addEventListener('submit', (e) => {
     first && first.focus();
     return;
   }
-  form.classList.add('is-done');
-  $('.fr__done', form).hidden = false;
-  form.reset();
+  const done = () => {
+    form.classList.add('is-done');
+    $('.fr__done', form).hidden = false;
+    form.reset();
+  };
+  // 운영 주소(maekjeok.co.kr)에서만 실제로 접수한다. 시안 주소에서는 화면 표시만.
+  if (!/(^|\.)maekjeok\.co\.kr$/.test(location.hostname)) { done(); return; }
+  const btn = $('button[type="submit"]', form);
+  const fail = $('.fr__fail', form);
+  const val = (n) => form.elements[n].value.trim();
+  fail.hidden = true;
+  $('.fr__done', form).hidden = true;
+  btn.disabled = true;
+  fetch('/api/inquiry', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: val('name'), tel: val('tel'), area: val('area'), agree: form.elements.agree.checked, website: val('website') }),
+  })
+    .then((r) => { if (!r.ok) throw new Error(r.status); done(); })
+    .catch(() => { fail.hidden = false; })
+    .finally(() => { btn.disabled = false; });
 });
 
 // ───────── 리사이즈: 200ms 디바운스, 폭이 같으면 다시 계산 안 함 ─────────
